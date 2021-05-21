@@ -1,28 +1,21 @@
 import sys, os
 
 from core.base.Model import Model
-
-from app.config import Config
-from configparser import ConfigParser
-
-config = Config.Instance()
-BASE_PATH = os.path.expanduser(config['PATHS']['BASE_PATH'])
-SOURCE_PORTS_INI_PATH = os.path.join(BASE_PATH, 'source_ports.ini')
-SOURCE_PORTS_CONFIG = ConfigParser(allow_no_value=True)
-SOURCE_PORTS_CONFIG.read(SOURCE_PORTS_INI_PATH)
-
-def source_port_loader():
-    source_ports = []
-    sections = SOURCE_PORTS_CONFIG.sections()
-
-    for section in sections:
-        source_ports.append(SOURCE_PORTS_CONFIG[section])
-
-    return source_ports
+from app.workers.SourcePortLoaderWorker import source_port_loader_worker_wrapper
 
 class SourcePorts(Model):
+    SOURCE_PORTS_LOADED = 'SOURCE_PORTS_LOADED'
+    SOURCE_PORTS_LOADED_ALL = 'SOURCE_PORTS_LOADED_ALL'
+
     def __init__(self):
-        Model.__init__(self, loader=source_port_loader)
-        self.load()
+        Model.__init__(self)
+        source_port_loader_worker_wrapper([self.source_port_loaded], [self.source_port_loaded_all])
+    
+    def source_port_loaded(self, obj):
+        id = self.create(**obj)
+        self.broadcast((self.SOURCE_PORTS_LOADED, self.find(id)))
+
+    def source_port_loaded_all(self):
+        self.broadcast((self.SOURCE_PORTS_LOADED_ALL, None))
 
 sys.modules[__name__] = SourcePorts()

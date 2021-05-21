@@ -24,9 +24,10 @@ class LaunchBarView:
         self.iwad_selector.currentIndexChanged.connect(self.select_iwad)
 
         self.source_port_selector_model = QStandardItemModel()
-        self.source_port_selector = root.findChild(QComboBox, 'launchbar_source_port_selector')
         for source_port in controller.models.source_ports.all():
             self.append_source_port(source_port)
+
+        self.source_port_selector = root.findChild(QComboBox, 'launchbar_source_port_selector')
         self.source_port_selector.setModel(self.source_port_selector_model)
         self.source_port_selector.currentIndexChanged.connect(self.select_source_port)
 
