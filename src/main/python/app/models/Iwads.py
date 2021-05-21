@@ -2,25 +2,21 @@ import glob, os, functools, sys
 
 from core.base.Model import Model
 from app.config import Config
-
-def iwad_loader():
-    config = Config.Instance()
-    path = os.path.expanduser(config['PATHS']['IWADS_PATH'])
-    files = glob.glob(os.path.join(os.path.abspath(path), '*.wad'))
-
-    iwads = []
-    for file in files:
-        with open(file, 'rb') as fd:
-            wad_type = fd.read(4).decode("utf-8")
-            if wad_type == 'IWAD':
-                iwads.append({'name': os.path.basename(file),
-                              'path': file})
-
-    return iwads
+from app.workers.IwadLoaderWorker import iwad_loader_worker_wrapper
 
 class Iwads(Model):
+    IWAD_LOADED = 'IWAD_LOADED'
+    IWAD_LOADED_ALL = 'IWAD_LOADED_ALL'
+
     def __init__(self):
-        Model.__init__(self, loader=iwad_loader)
-        self.load()
+        Model.__init__(self)
+        iwad_loader_worker_wrapper([self.iwad_loaded], [self.iwad_loaded_all])
+
+    def iwad_loaded(self, obj):
+        id = self.create(**obj)
+        self.broadcast((self.IWAD_LOADED, self.find(id)))
+
+    def iwad_loaded_all(self):
+        self.broadcast((self.IWAD_LOADED_ALL,None))
 
 sys.modules[__name__] = Iwads()
