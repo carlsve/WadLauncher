@@ -12,7 +12,7 @@ class WadTableController:
         action, data = msg
 
         if (action == 'CREATE_WAD'):
-            self.view.add_item(self.wads.find(data))
+            self.view.appendRow(self.wads.find(data))
         elif action == 'REMOVE_WAD':
             self.view.remove_item(data)
         elif action == self.wads.WADS_LOADED:

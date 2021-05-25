@@ -19,6 +19,8 @@ class WadTreeController:
             self.view.finish_loading('wads')
         elif action == self.models.wads.WADS_REMOVE:
             self.view.wad_removed(data)
+        elif action == self.models.wads.WADS_CREATED:
+            self.view.new_wad(self.models.wads.find(data))
         elif action == self.models.categories.LOADED:
             self.view.appendCategory(data)
         elif action == self.models.categories.LOADED_ALL:

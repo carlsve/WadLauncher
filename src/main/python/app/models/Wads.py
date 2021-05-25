@@ -7,34 +7,9 @@ from app.workers.DWApiWorker import api_worker_wrapper, DWApiMethod
 from app.workers.DownloadWorker import download_worker_wrapper
 from app.workers.ArchiveExtractorWorker import archive_extractor_worker_wrapper
 from app.workers.WadLoaderWorker import wad_loader_worker_wrapper
-
-def save_wad(item):
-    metadata_file_path = os.path.join(item['path'], 'metadata.json')
-    with open(metadata_file_path, 'w+', encoding='utf-8') as f:
-        json.dump(item, f, ensure_ascii=False, indent=4)
-
-def search_wad_dir(dir):
-    file_paths = []
-    for (root, _, files) in os.walk(dir):
-        file_paths.extend(
-            [os.path.join(root, file) for file in files if is_mod(file)]
-        )
-    return file_paths
-
-def load_wad(dir):
-    loaded_wad = {
-        'name': os.path.basename(dir),
-        'path': dir,
-        'file_paths': search_wad_dir(dir)
-    }
-    if 'metadata.json' in os.listdir(dir):
-        with open(os.path.join(dir, 'metadata.json'), 'r') as json_file:
-            loaded_wad.update(json.load(json_file))
-    try:
-        loaded_wad.update(file_path=loaded_wad['file_paths'][0])
-    except IndexError:
-        loaded_wad.update(file_path=None, error='No mod file found (.wad or .pk3)')
-    return loaded_wad
+from app.workers.WadImporterWorker import wad_importer_worker_wrapper
+from app.workers.WadRemoverWorker import wad_remover_worker_wrapper
+from app.workers.WadSaverWorker import wad_saver_worker_wrapper
 
 class Wads(Model):
     WADS_LOADED = 'WADS_LOADED'
@@ -46,7 +21,7 @@ class Wads(Model):
     WADS_REMOVE = 'REMOVE_WAD'
 
     def __init__(self):
-        Model.__init__(self, saver=save_wad)
+        Model.__init__(self, saver=wad_saver_worker_wrapper)
         self.wad_dir_files = []
         self.current_idgames_wad_id = None
         self.load_ordered_files = []
@@ -76,9 +51,11 @@ class Wads(Model):
         )
 
     def import_wad(self, wad_dir, item={}):
-        id = self.create(**load_wad(wad_dir), **item)
-        self.save(id)
-        self.broadcast((WADS_CREATED, id))
+        def on_import(wad):
+            id = self.create(**dict(list(wad.items()) + list(item.items())))
+            self.save(id)
+            self.broadcast((self.WADS_CREATED, id))
+        wad_importer_worker_wrapper(wad_dir, [], [on_import])
 
     def idgames_download(self, item, mirror=None):
         id = item['id']
@@ -132,8 +109,9 @@ class Wads(Model):
 
     def remove(self, id):
         wad = self.delete(id)
-        self.broadcast((self.WADS_REMOVE, wad))
-        # shutil.rmtree(wad['path'])
+        def on_remove():
+            self.broadcast((self.WADS_REMOVE, wad))
+        wad_remover_worker_wrapper(wad['path'], [], [on_remove])
 
     def set_load_order(self, files):
         self.load_ordered_files = files

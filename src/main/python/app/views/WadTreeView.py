@@ -33,7 +33,6 @@ class WadTreeView(Base, Form):
         self.id_item_mapping = {}
         self.temp_move_storage = { 'from': None, 'to': None }
 
-
         self.wadtree = self.findChild(QTreeView, 'wadtree')
         self.wadtree.dropEvent = self.dropEvent
         self.wadtree.setDragEnabled(True)
@@ -111,6 +110,13 @@ class WadTreeView(Base, Form):
         item = self.id_item_mapping[data['id']]
         parent = item.parent() or self.root
         parent.removeRow(item.row())
+    
+    def new_wad(self, data):
+        item = self.make_tree_item(data.get('title', data['name']), data)
+        item.setFlags(TREE_WAD_FLAGS)
+        self.root.appendRow(item)
+        self.categories.add_child(self.root.data(ID_ROLE), data['id'])
+        self.categories.save()
 
     def new_category(self, index):
         item = self.wadtree_model.itemFromIndex(index) or self.root
@@ -163,7 +169,7 @@ class WadTreeView(Base, Form):
     def appendWad(self, data):
         if data['id'] in self.pending_children:
             item = self.pending_children.pop(data['id'])
-            item.setText(data['name'])
+            item.setText(data.get('title', data['name']))
             item.setData(data['model_type'], TYPE_ROLE)
             item.setFlags(TREE_WAD_FLAGS)
             self.id_item_mapping[data['id']] = item
@@ -179,7 +185,7 @@ class WadTreeView(Base, Form):
             item.setData(data['model_type'], TYPE_ROLE)
         elif data['id'] in self.pending_children:
             item = self.pending_children.pop(data['id'])
-            item.setText(data['name'])
+            item.setText(data.get('title', data['name']))
             item.setData(data['model_type'], TYPE_ROLE)
         else:
             item = self.make_tree_item(data['name'], data)
