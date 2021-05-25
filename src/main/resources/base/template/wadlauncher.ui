@@ -301,7 +301,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>import zip</string>
+    <string>import zip(s)</string>
    </property>
   </action>
  </widget>

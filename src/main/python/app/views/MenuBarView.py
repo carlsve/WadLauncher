@@ -8,6 +8,8 @@ class MenuBarView:
         self.import_zip_action.triggered.connect(self.file_dialog_opener)
 
     def file_dialog_opener(self):
-        dialog = QFileDialog(self.root, 'Select zip file to import')
+        dialog = QFileDialog(self.root, 'Select zip file(s) to import')
+        dialog.setFileMode(QFileDialog.ExistingFiles)
         if dialog.exec_() == QDialog.Accepted:
-            self.controller.select_unzip_file(dialog.selectedFiles()[0])
+            for selected_file in dialog.selectedFiles():
+                self.controller.select_unzip_file(selected_file)
