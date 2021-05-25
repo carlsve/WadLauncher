@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
-ID_ROLE = Qt.UserRole + 1
+from app.helpers.ItemFactory import make_generic, ID_ROLE
 
 class LaunchBarView:
     def __init__(self, root, controller):
@@ -32,18 +32,16 @@ class LaunchBarView:
         launch_wad_button = root.findChild(QPushButton, 'launchbar_launch_button')
         launch_wad_button.clicked.connect(self.controller.launch_wad_press)
 
-    def append_iwad(self, iwad):
-        item = QStandardItem(iwad['name'])
-        item.setData(iwad['id'], ID_ROLE)
+    def append_iwad(self, data):
+        item = make_generic(data['name'], data['id'])
         self.iwad_selector_model.appendRow(item)
     
     def select_iwad(self, index):
         item = self.iwad_selector_model.item(index)
         self.controller.select_iwad(item.data(ID_ROLE))
 
-    def append_source_port(self, source_port):
-        item = QStandardItem(source_port['name'])
-        item.setData(source_port['id'], ID_ROLE)
+    def append_source_port(self, data):
+        item = make_generic(data['name'], data['id'])
         self.source_port_selector_model.appendRow(item)
     
     def select_source_port(self, index):
