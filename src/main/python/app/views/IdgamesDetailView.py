@@ -30,7 +30,8 @@ class IdgamesDetailView(Base, Form):
         data_labels = ['title', 'filename', 'size', 'date', 'author', 'description', 'credits', 'base', 'buildtime', 'editors', 'bugs','rating']
         self.idgames_response_widget = IdgamesResponseWidget(self, data_labels, 'idgames_detail', self.download, data_labels)
 
-    def set_data(self, item, already_downloaded):
+    def set_data(self, item, already_downloaded, detail_type):
+        self.detail_type = detail_type
         self.idgames_response_widget.set_data(item, already_downloaded)
         self.textfile = self.findChild(QPlainTextEdit, 'idgames_detail_textfile')
 
@@ -42,4 +43,4 @@ class IdgamesDetailView(Base, Form):
 
     def download(self, id):
         mirror = self.mirror_button_group.checkedButton().objectName()
-        self.controller.download(id, mirror)
+        self.controller.download(id, mirror, self.detail_type)

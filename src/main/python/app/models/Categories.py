@@ -34,8 +34,8 @@ class Categories(Model):
         category_saver_worker_wrapper(self.all())
         self.broadcast((self.REMOVE, (parent_id, id)))
     
-    def new(self, parent_id):
-        id = self.create(name='new category', children=[])
+    def new(self, parent_id, name='new category'):
+        id = self.create(name=name, children=[])
         self.add_child(parent_id, id)
         self.broadcast((self.NEW, (parent_id, self.find(id))))
         category_saver_worker_wrapper(self.all())

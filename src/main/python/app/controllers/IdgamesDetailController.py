@@ -23,7 +23,7 @@ class IdgamesDetailController:
             result, err = data
             self.data = result
             already_downloaded = bool(self.wads.find_by(id=result['id']))
-            self.view.set_data(result, already_downloaded)
+            self.view.set_data(result, already_downloaded, action)
             display_widget(self.root, WidgetIndices.IDGAMES_DETAIL)
         elif action == self.wads.DOWNLOAD_PROGRESS:
             id, progress = data
@@ -34,12 +34,12 @@ class IdgamesDetailController:
             if id == self.view.idgames_response_widget.id:
                 self.view.idgames_response_widget.download_finished()
 
-    def download(self, id, mirror):
+    def download(self, id, mirror, detail_type):
         if self.data == None:
             return
         if id != self.data['id']:
             return
 
-        self.wads.idgames_download(self.data, mirror)
+        self.wads.idgames_download(self.data, mirror, detail_type)
 
 sys.modules[__name__] = IdgamesDetailController()

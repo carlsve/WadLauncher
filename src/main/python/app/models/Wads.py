@@ -16,6 +16,7 @@ class Wads(Model):
     LOADED_ALL = 'WADS_LOADED_ALL'
     SELECTED = 'WADS_SELECT'
     CREATE = 'WADS_CREATE'
+    IMPORT = 'WADS_IMPORT'
     REMOVE = 'WADS_REMOVE'
     DOWNLOAD_PROGRESS = 'WADS_DOWNLOAD_PROGRESS'
     DOWNLOAD_FINISHED = 'WADS_DOWNLOAD_FINISHED'
@@ -43,9 +44,9 @@ class Wads(Model):
 
         self.broadcast((self.SELECTED, selected_wad))
 
-    def extract_archive(self, file_path, should_remove_archive=False, item={}):
+    def extract_archive(self, file_path, should_remove_archive=False, item={}, detail_type=None):
         def handle_import_wad(wad_dir):
-            self.import_wad(wad_dir, item)
+            self.import_wad(wad_dir, item, detail_type)
 
         archive_extractor_worker_wrapper(
             file_path,
@@ -53,21 +54,26 @@ class Wads(Model):
             [handle_import_wad]
         )
 
-    def import_wad(self, wad_dir, item={}):
+    def import_wad(self, wad_dir, item={}, detail_type=None):
         def on_import(wad):
             id = self.create(**dict(list(wad.items()) + list(item.items())))
             self.save(id)
             self.broadcast((self.CREATE, id))
+            category_name = 'idgames/download'
+            if detail_type == self.RANDOM:
+                category_name = 'idgames/random'
+            self.broadcast((self.IMPORT, (id, category_name)))
+
         wad_importer_worker_wrapper(wad_dir, [], [on_import])
 
-    def idgames_download(self, item, mirror=None):
+    def idgames_download(self, item, mirror=None, detail_type=None):
         id = item['id']
         def handle_download_progress(*args):
             self.broadcast((self.DOWNLOAD_PROGRESS, (id, args)))
         def handle_download_finished():
             self.broadcast((self.DOWNLOAD_FINISHED, id))
         def handle_extract_archive(file_path):
-            self.extract_archive(file_path, True, item)
+            self.extract_archive(file_path, True, item, detail_type)
 
         download_worker_wrapper(
             item,
