@@ -19,14 +19,14 @@ class IdgamesSearchController:
     def wads_listener(self, args):
         action, data = args
 
-        if action == 'SEARCH_WADS':
+        if action == self.wads.SEARCH:
             self.view.updateResults(data)
             self.set_search_results(data)
-        elif action == 'DOWNLOAD_PROGRESS':
+        elif action == self.wads.DOWNLOAD_PROGRESS:
             id, progress = data
             if id in self.view.search_results_widgets:
                 self.view.search_results_widgets[id].idgames_response_widget.download_progress(*progress)
-        elif action == 'DOWNLOAD_FINISHED':
+        elif action == self.wads.DOWNLOAD_FINISHED:
             id = data
             if id in self.view.search_results_widgets:
                 self.view.search_results_widgets[id].idgames_response_widget.download_finished()

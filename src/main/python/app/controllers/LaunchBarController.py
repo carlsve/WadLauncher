@@ -8,37 +8,41 @@ class LaunchBarController:
         pass
 
     def show(self, root, models):
-        self.wads = models.wads
-        self.all_iwads = sorted(models.iwads.all(), key=lambda k: k['name'])
-        self.all_source_ports = sorted(models.source_ports.all(), key=lambda k: k['name'])
+        self.models = models
         self.selected_iwad = None
         self.selected_source_port = None
-        self.view = LaunchBarView(root,
-                                  self.all_iwads,
-                                  self.all_source_ports,
-                                  self.select_iwad,
-                                  self.select_source_port,
-                                  self.launch_wad_press)
+        self.view = LaunchBarView(root, self)
 
-        models.wads.subscribe(self.wads_subscription)
+        models.wads.subscribe(self.subscription)
+        models.iwads.subscribe(self.subscription)
+        models.source_ports.subscribe(self.subscription)
 
-    def wads_subscription(self, data):
-        action, data = data
+    def subscription(self, message):
+        action, data = message
 
-        if action == 'SELECT_WAD':
+        if action == self.models.wads.SELECTED:
             self.view.update_selected_wad(data)
+        elif action == self.models.iwads.LOADED:
+            self.view.append_iwad(data)
+        elif action == self.models.iwads.LOADED_ALL:
+            pass
+        elif action == self.models.source_ports.LOADED:
+            self.view.append_source_port(data)
+        elif action == self.models.source_ports.LOADED_ALL:
+            pass
 
-    def select_iwad(self, index):
-        self.selected_iwad = self.all_iwads[index]
+    def select_iwad(self, id):
+        self.selected_iwad = self.models.iwads.find(id)
 
-    def select_source_port(self, index):
-        self.selected_source_port = self.all_source_ports[index]
+    def select_source_port(self, id):
+        self.selected_source_port = self.models.source_ports.find(id)
 
     def launch_wad_press(self):
-        Launcher.launch(
-            self.wads.load_ordered_files,
-            self.selected_iwad,
-            self.selected_source_port
-        )
+        if self.selected_iwad and self.selected_source_port:
+            Launcher.launch(
+                self.models.wads.load_ordered_files,
+                self.selected_iwad,
+                self.selected_source_port
+            )
 
 sys.modules[__name__] = LaunchBarController()

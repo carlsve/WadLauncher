@@ -13,180 +13,244 @@ template_path = AppContext.Instance().get_resource('template/wadtree.ui')
 Form, Base = uic.loadUiType(template_path)
 
 TREE_WAD_FLAGS = Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemNeverHasChildren
+ID_ROLE = Qt.UserRole + 1
+TYPE_ROLE = Qt.UserRole + 2
 
 class WadTreeView(Base, Form):
-    def __init__(self, root, models, controller, parent=None):
+    def __init__(self, root, controller, parent=None):
         super(self.__class__, self).__init__(parent)
 
         self.setupUi(self)
         add_widget(root, self, 'WAD_TREE')
 
-        self.wads = models.wads
-        self.categories = models.categories
+        self.wads = controller.models.wads
+        self.categories = controller.models.categories
         self.controller = controller
-
-        self.wadtree_model = QStandardItemModel()
-
-        self.moving_item = None
-        self.wadtree_model.rowsRemoved.connect(self.row_removed)
-        # rowsInserted does NOT work as it is documented to.
-        # We use itemChanged signal instead.
-        self.wadtree_model.itemChanged.connect(self.text_change_or_row_insert, type=Qt.QueuedConnection)
+        self.loaded_wads = {}
+        self.loaded_categories = {}
+        self.pending_children = {}
+        self.finished_loading = { 'categories': False, 'wads': False }
+        self.id_item_mapping = {}
 
         self.wadtree = self.findChild(QTreeView, 'wadtree')
+        self.wadtree.dropEvent = self.dropEvent
         self.wadtree.setDragEnabled(True)
         self.wadtree.viewport().setAcceptDrops(True)
         self.wadtree.setDropIndicatorShown(True)
-        self.wadtree.setDragDropMode(QAbstractItemView.InternalMove)
-        self.wadtree.setModel(self.wadtree_model)
-        self.wadtree.selectionModel().selectionChanged.connect(self.select_tree_index)
+        self.wadtree.setDragDropMode(QAbstractItemView.DragDrop)
+        self.wadtree.setDefaultDropAction(Qt.MoveAction)
         self.wadtree.setContextMenuPolicy(Qt.CustomContextMenu)
         self.wadtree.customContextMenuRequested.connect(self.open_menu)
 
-        self.is_importing = True
-        self.appended_wads = []
-        root_category = self.categories.find_by(is_root='yes')
-        root_item = self.wadtree_model.invisibleRootItem()
-        root_item.setData(root_category, DATA_ROLE)
-        self.recursive_import(root_item, root_category.get('children', []))
-        for wad in self.wads.all():
-            if wad['id'] not in self.appended_wads:
-                self.wadtree_model.invisibleRootItem().appendRow(self.create_row(wad))
-        AppContext.Instance().app.processEvents()
-        self.is_importing = False
-        self.wadtree.expandAll()
+        self.wadtree_model = QStandardItemModel()
+        self.wadtree.setModel(self.wadtree_model)
 
-    def text_change_or_row_insert(self, item):
-        item_data = item.data()
-        item_text = item.text()
-        if item_data['model_type'] != 'wads' and item_text != item_data['name']:
-            id = item_data['id']
-            self.categories.update(id, name=item_text)
-            self.categories.save(id)
-            return
-        dst_parent = self.wadtree_model.invisibleRootItem()
-        if item.parent():
-            dst_parent = item.parent()
-        self.update_parent(dst_parent)
+        self.wadtree.selectionModel().selectionChanged.connect(self.select_tree_index)
+        self.wadtree_model.itemChanged.connect(self.change_category_text)
 
-    def row_removed(self, index, *_):
-        src_parent = self.wadtree_model.invisibleRootItem()
-        if index.isValid():
-            src_parent = self.wadtree_model.itemFromIndex(index)
-        self.update_parent(src_parent)
+        self.root = self.wadtree_model.invisibleRootItem()
 
-    def update_parent(self, parent):
-        def get_child(i): return parent.child(i).data()['id']
-        children = [get_child(i) for i in range(parent.rowCount())]
+    def dropEvent(self, e):
+        from_index = e.source().currentIndex()
+        from_item = self.wadtree_model.itemFromIndex(from_index)
+        from_parent = from_item.parent() or self.root
+        from_row = from_item.row()
 
-        parent_id = parent.data(DATA_ROLE)['id']
-        self.categories.update(parent_id, children=children)
-        self.categories.save(parent_id)
+        to_index = self.wadtree.indexAt(e.pos())
+        to_item = self.wadtree_model.itemFromIndex(to_index) or self.root
+        to_parent = to_item.parent() or self.root
+        to_row = to_item.row()
 
-    def recursive_import(self, parent, children):
-        for child_id in children:
-            child = None
-            try:
-                child = self.categories.find(child_id)
-            except KeyError:
-                try:
-                    child = self.wads.find(child_id)
-                    self.appended_wads.append(child['id'])
-                except KeyError:
-                    continue
-            child_item = self.create_row(child)
-            parent.appendRow(child_item)
-            self.recursive_import(child_item, child.get('children', []))
+        take_from = from_parent.takeRow(from_row)
+        sharing_parents = from_parent == to_parent
+        adjust = {
+            QAbstractItemView.AboveItem: (-1) if sharing_parents and from_row < to_row else 0,
+            QAbstractItemView.BelowItem: (0) if sharing_parents and from_row < to_row else 1
+        }
+        self.categories.remove_child(from_parent.data(ID_ROLE), from_item.data(ID_ROLE))
 
-    def open_menu(self, pos):
-        index = self.wadtree.indexAt(pos)
-        def add_category(): self.add_category(index)
-        menu_actions = [('Add Category', add_category)]
+        indicator = self.wadtree.dropIndicatorPosition()
+        if indicator == QAbstractItemView.OnItem:
+            to_item.appendRow(take_from)
+            self.categories.add_child(to_item.data(ID_ROLE), from_item.data(ID_ROLE))
+        elif indicator == QAbstractItemView.AboveItem:
+            to_parent.insertRow(to_row + adjust[indicator], take_from)
+            self.categories.insert_child(to_parent.data(ID_ROLE), from_item.data(ID_ROLE), to_row + adjust[indicator])
+        elif indicator == QAbstractItemView.BelowItem:
+            to_parent.insertRow(to_row + adjust[indicator], take_from)
+            self.categories.insert_child(to_parent.data(ID_ROLE), from_item.data(ID_ROLE), to_row + adjust[indicator])
+        elif indicator == QAbstractItemView.OnViewport:
+            to_parent.appendRow(take_from)
+            self.categories.add_child(to_parent.data(ID_ROLE), from_item.data(ID_ROLE))
 
-        if index.isValid():
-            item = self.wadtree_model.itemFromIndex(index)
-            item_data = item.data(DATA_ROLE)
-            if item_data['model_type'] == 'categories':
-                def remove_category():
-                    self.remove_category(index)
-                remove_category_str = 'Remove category ({})'.format(item_data['name'])
-                menu_actions.append((remove_category_str, remove_category))
-            elif item_data['model_type'] == 'wads':
-                wad_string = item_data.get('title') or item_data.get('name')
-                remove_wad_string = 'Remove ({})'.format(wad_string)
-                def remove_wad():
-                    self.wadtree_model.removeRow(item.row())
-                    self.controller.remove_wad(item_data)
-                menu_actions.append((remove_wad_string, remove_wad))
+        self.categories.save()
 
-        execute_menu = make_context_menu(self, menu_actions)
-        execute_menu(pos)
-
-    def add_category(self, index):
-        item = None
-        try:
-            maybe_item = self.wadtree_model.itemFromIndex(index)
-            maybe_item_data = maybe_item.data()
-            if maybe_item_data['model_type'] == 'categories':
-                item = maybe_item
-            elif maybe_item_data['model_type'] == 'wads':
-                parent_index = index.parent()
-                if parent_index.isValid():
-                    item = self.wadtree_model.itemFromIndex(parent_index)
-                else:
-                    item = self.wadtree_model.invisibleRootItem()
-        except Exception:
-            item = self.wadtree_model.invisibleRootItem()
-        child_id = self.categories.create(name='new category', children=[])
-        self.categories.save(child_id)
-        child_data = self.categories.find(child_id)
-        new_child = self.create_row(child_data)
-        item.appendRow(new_child)
-        # Focus new item:
-        AppContext.Instance().app.processEvents()
-        new_child_index = self.wadtree_model.indexFromItem(new_child)
-        self.wadtree.edit(new_child_index)
-    
-    def remove_category(self, index):
-        if not index.isValid():
-            return
-        item = self.wadtree_model.itemFromIndex(index)
-        parent_item = self.wadtree_model.invisibleRootItem()
-        parent_index = index.parent()
-        if parent_index.isValid():
-            parent_item = self.wadtree_model.itemFromIndex(parent_index)
-        for row in range(item.rowCount()):
-            child = item.takeChild(row)
-            parent_item.appendRow(child)
-        item_data = item.data(DATA_ROLE)
-        parent_item.removeRow(item.row())
-        self.controller.remove_category(item_data)
-
-    def add_wad(self, wad):
-        item = self.create_row(wad)
-        self.wadtree_model.invisibleRootItem().appendRow(item)
-
-    def remove_wad(self, wad):
-        for row in range(self.wadtree_model.rowCount()):
-            item = self.wadtree_model.item(row)
-            if item and item.data()['id'] == wad['id']:
-                self.wadtree_model.removeRow(row)
+    def change_category_text(self, item):
+        if all(self.finished_loading.values()):
+            item_text = item.text()
+            if item.data(TYPE_ROLE) == 'categories' and self.categories.find(item.data(ID_ROLE))['name'] != item_text:
+                self.controller.edit_category(item.data(ID_ROLE), name=item_text)
 
     def select_tree_index(self, selection):
         if len(selection.indexes()) == 0:
             return
         index = selection.indexes()[0]
         item = self.wadtree_model.itemFromIndex(index)
-        if item.data()['model_type'] == 'wads':
-            self.wads.select_wad(item.data()['id'])
+        if item.data(TYPE_ROLE) == 'wads':
+            self.wads.select_wad(item.data(ID_ROLE))
 
-    def create_row(self, model_item):
-        if model_item['model_type'] == 'categories':
-            item = QStandardItem(model_item['name'])
-            item.setData(model_item, DATA_ROLE)
+    def remove_wad(self, item):
+        parent = item.parent() or self.root
+        self.categories.remove_child(parent.data(ID_ROLE), item.data(ID_ROLE))
+        self.categories.save()
+        self.wads.remove(item.data(ID_ROLE))
+
+    def wad_removed(self, data):
+        item = self.id_item_mapping[data['id']]
+        parent = item.parent() or self.root
+        parent.removeRow(item.row())
+    
+    def new_wad(self, data):
+        item = self.make_tree_item(data.get('title', data['name']), data)
+        item.setFlags(TREE_WAD_FLAGS)
+        self.root.appendRow(item)
+        self.categories.add_child(self.root.data(ID_ROLE), data['id'])
+        self.categories.save()
+
+    def new_category(self, index):
+        item = self.wadtree_model.itemFromIndex(index) or self.root
+        if item.data(TYPE_ROLE) == 'wads':
+            item = self.wadtree_model.itemFromIndex(index.parent()) or self.root
+        self.categories.new(item.data(ID_ROLE))
+
+    def category_added(self, parent_id, data):
+        item = self.make_tree_item(data['name'], data)
+        nameItemFont = item.font()
+        nameItemFont.setBold(True)
+        item.setFont(nameItemFont)
+        self.id_item_mapping[parent_id].appendRow(item)
+
+    def remove_category(self, id):
+        parent = self.id_item_mapping[id].parent() or self.root
+        self.categories.remove(id, parent.data(ID_ROLE))
+
+    def category_removed(self, parent_id, id):
+        parent = self.id_item_mapping[parent_id]
+        item = self.id_item_mapping.pop(id)
+        item_row = item.row()
+        for row in reversed(range(item.rowCount())):
+            child = item.takeChild(row)
+            parent.insertRow(item_row + 1, child)
+        parent.removeRow(item_row)
+
+    def open_menu(self, pos):
+        index = self.wadtree.indexAt(pos)
+        entries = [('Add Category', lambda *_: self.new_category(index))]
+
+        if index.isValid():
+            item = self.wadtree_model.itemFromIndex(index)
+            model = getattr(self, item.data(TYPE_ROLE).lower())
+            data = model.find(item.data(ID_ROLE))
+
+            def remove_wad():
+                self.remove_wad(item)
+            def remove_category():
+                self.remove_category(data['id'])
+            entries_by_model = {
+                'categories': ('Remove category ({})'.format(data.get('name')), remove_category),
+                'wads': ('Remove ({})'.format(data.get('title') or data.get('name')), remove_wad)
+            }
+            entries.append(entries_by_model[item.data(TYPE_ROLE).lower()])
+
+        execute_menu = make_context_menu(self, entries)
+        execute_menu(pos)
+
+    def appendWad(self, data):
+        if data['id'] in self.pending_children:
+            item = self.pending_children.pop(data['id'])
+            item.setText(data.get('title', data['name']))
+            item.setData(data['model_type'], TYPE_ROLE)
+            item.setFlags(TREE_WAD_FLAGS)
+            self.id_item_mapping[data['id']] = item
+        else:
+            self.loaded_wads[data['id']] = data
+
+    def appendCategory(self, data):
+        is_root = data.get('is_root', 'False') == 'True'
+        item = None
+        if is_root:
+            item = self.root
+            item.setData(data['id'], ID_ROLE)
+            item.setData(data['model_type'], TYPE_ROLE)
+        elif data['id'] in self.pending_children:
+            item = self.pending_children.pop(data['id'])
+            item.setText(data.get('title', data['name']))
+            item.setData(data['model_type'], TYPE_ROLE)
+        else:
+            item = self.make_tree_item(data['name'], data)
+            self.loaded_categories[data['id']] = item
+
+        self.id_item_mapping[data['id']] = item
+        if not is_root:
             nameItemFont = item.font()
             nameItemFont.setBold(True)
             item.setFont(nameItemFont)
-            return item
-        if model_item['model_type'] == 'wads':
-            return make_wad_item(model_item, TREE_WAD_FLAGS)
+
+        for child_id in data['children']:
+            child_item = None
+            if child_id in self.loaded_wads:
+                wad = self.loaded_wads.pop(child_id)
+                child_item = self.make_tree_item(wad['name'], wad)
+                child_item.setFlags(TREE_WAD_FLAGS)
+                self.id_item_mapping[data['id']] = item
+            elif child_id in self.loaded_categories:
+                child_item = self.loaded_categories.pop(child_id)
+            else:
+                child_item = QStandardItem('loading... ')
+                child_item.setData(child_id, ID_ROLE)
+                self.pending_children[child_id] = child_item
+            item.appendRow(child_item)
+
+        if data['id'] not in self.loaded_categories:
+            index = self.wadtree_model.indexFromItem(item)
+            self.wadtree.expand(index)
+
+    def finish_loading(self, model_type):
+        self.finished_loading[model_type] = True
+        if not all(self.finished_loading.values()): return
+        wads_missing_categories = False
+        root_id = self.root.data(ID_ROLE)
+        for wad in self.loaded_wads.values():
+            if wad['id'] in self.pending_children:
+                item = self.pending_children.pop(wad['id'])
+                item.setText(wad['name'])
+                item.setData(wad['model_type'], TYPE_ROLE)
+                item.setFlags(TREE_WAD_FLAGS)
+                self.id_item_mapping[wad['id']] = item
+            else:
+                item = self.make_tree_item(wad['name'], wad)
+                self.root.appendRow(item)
+                wads_missing_categories = True
+                self.categories.add_child(root_id, wad['id'])
+                self.id_item_mapping[wad['id']] = item
+        for category in self.loaded_categories.values():
+            self.root.appendRow(category)
+            wads_missing_categories = True
+            self.categories.add_child(root_id, category.data(ID_ROLE))
+        if wads_missing_categories:
+            self.categories.save()
+
+        for pending_child in self.pending_children.values():
+            parent = (pending_child.parent() or self.root)
+            parent_id = parent.data(ID_ROLE)
+            
+            self.categories.remove_child(parent_id, pending_child.data(ID_ROLE))
+            self.categories.save()
+            parent.removeRow(pending_child.row())
+
+    def make_tree_item(self, text, data):
+        item = QStandardItem(text)
+        item.setData(data['id'], ID_ROLE)
+        item.setData(data['model_type'], TYPE_ROLE)
+        self.id_item_mapping[data['id']] = item
+        return item
