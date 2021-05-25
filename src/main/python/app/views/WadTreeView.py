@@ -242,9 +242,12 @@ class WadTreeView(Base, Form):
             self.categories.save()
 
         for pending_child in self.pending_children.values():
-            parent_id = (pending_child.parent() or self.root).data(ID_ROLE)
+            parent = (pending_child.parent() or self.root)
+            parent_id = parent.data(ID_ROLE)
+            
             self.categories.remove_child(parent_id, pending_child.data(ID_ROLE))
             self.categories.save()
+            parent.removeRow(pending_child.row())
 
     def make_tree_item(self, text, data):
         item = QStandardItem(text)
