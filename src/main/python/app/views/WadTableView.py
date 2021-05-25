@@ -44,13 +44,13 @@ class WadTableSortFilterProxyModel(QSortFilterProxyModel):
         return True
 
 class WadTableView(Base, Form):
-    def __init__(self, root, wads, controller, parent=None):
+    def __init__(self, root, controller, parent=None):
         super(self.__class__, self).__init__(parent)
 
         self.setupUi(self)
         add_widget(root, self, 'WAD_TABLE')
 
-        self.wads = wads
+        self.wads = controller.wads
         self.controller = controller
 
         self.proxy = WadTableSortFilterProxyModel(root)
@@ -72,7 +72,8 @@ class WadTableView(Base, Form):
         self.keys = ['title', 'filename', 'author', 'date', 'rating']
         self.wadtable_model.setHorizontalHeaderLabels([key.capitalize() for key in self.keys])
 
-        self.import_wads(wads.all())
+        for wad in self.wads.all():
+            self.appendRow(wad)
 
     def open_menu(self, pos):
         if self.selected_item == None:
@@ -101,7 +102,7 @@ class WadTableView(Base, Form):
         self.selected_item = item
         self.wads.select_wad(item.data(DATA_ROLE)['id'])
 
-    def add_item(self, wad):
+    def appendRow(self, wad):
         item = make_wad_item(wad, TABLE_ITEM_FLAGS)
         def make_column_item(wad, key):
             return QStandardItem(wad.get(key) or 'unknown')
@@ -115,7 +116,3 @@ class WadTableView(Base, Form):
             item = self.wadtable_model.item(row)
             if item and item.data(DATA_ROLE)['id'] == wad['id']:
                 self.wadtable_model.removeRow(row)
-
-    def import_wads(self, wads):
-        for wad in wads:
-            self.add_item(wad)

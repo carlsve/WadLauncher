@@ -8,17 +8,19 @@ class WadListController:
     
     def show(self, root, models):
         self.wads = models.wads
-        self.view = WadListView(root, self.wads, self)
+        self.view = WadListView(root, self)
 
-        self.wads.subscribe(self.wad_subscription)
+        self.wads.subscribe(self.subscription)
     
-    def wad_subscription(self, msg):
+    def subscription(self, msg):
         action, data = msg
 
-        if (action == 'CREATE_WAD'):
-            self.view.add_item(self.wads.find(data))
+        if (action == self.wads.WADS_CREATED):
+            self.view.appendWad(self.wads.find(data))
         elif action == 'REMOVE_WAD':
             self.view.remove_item(data)
+        elif action == self.wads.WADS_LOADED:
+            self.view.appendWad(data)
 
     def remove_wad(self, wad):
         self.wads.remove(wad['id'])

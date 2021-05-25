@@ -9,9 +9,9 @@ from app.helpers.ContextMenuFactory import make_context_menu
 LIST_ITEM_FLAGS = Qt.ItemIsSelectable | Qt.ItemIsEnabled
 
 class WadListView:
-    def __init__(self, root, wads, controller):
+    def __init__(self, root, controller):
         self.controller = controller
-        self.wads = wads
+        self.wads = controller.wads
 
         self.wadlist = root.findChild(QListView, 'wad_list')
         self.wadinfo = root.findChild(QWidget, 'wad_info')
@@ -19,14 +19,14 @@ class WadListView:
         self.selected_item = None
 
         self.wadlist_model = QStandardItemModel()
+        for wad in self.wads.all():
+            self.appendWad(wad)
         self.wadlist.setModel(self.wadlist_model)
         self.wadlist.setSelectionMode(QAbstractItemView.SingleSelection)
         self.wadlist.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.wadlist.selectionModel().selectionChanged.connect(self.select_item)
         self.wadlist.setContextMenuPolicy(Qt.CustomContextMenu)
         self.wadlist.customContextMenuRequested.connect(self.open_menu)
-
-        self.import_wads(wads.all())
         widget_changed(root, self.on_widget_change)
 
         self.wadtable_button = root.findChild(QPushButton, 'sidebar_wadsview_table')
@@ -70,9 +70,8 @@ class WadListView:
 
         self.wads.select_wad(item.data(DATA_ROLE)['id'])
 
-    def add_item(self, wad):
+    def appendWad(self, wad):
         item = make_wad_item(wad, LIST_ITEM_FLAGS)
-
         self.wadlist_model.appendRow(item)
 
     def remove_item(self, wad):
@@ -83,4 +82,4 @@ class WadListView:
 
     def import_wads(self, wads):
         for wad in wads:
-            self.add_item(wad)
+            self.appendWad(wad)

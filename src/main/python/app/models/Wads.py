@@ -6,14 +6,12 @@ from app.config import Config
 from app.workers.DWApiWorker import api_worker_wrapper, DWApiMethod
 from app.workers.DownloadWorker import download_worker_wrapper
 from app.workers.ArchiveExtractorWorker import archive_extractor_worker_wrapper
+from app.workers.WadLoaderWorker import wad_loader_worker_wrapper
 
-config = Config.Instance()
-WADS_PATH = os.path.expanduser(config['PATHS']['WADS_PATH'])
-EXTENSIONS = ['.wad', '.pk3', '.deh', '.bex']
-
-
-def is_mod(file): return any(file.lower().endswith(ext) for ext in EXTENSIONS)
-
+def save_wad(item):
+    metadata_file_path = os.path.join(item['path'], 'metadata.json')
+    with open(metadata_file_path, 'w+', encoding='utf-8') as f:
+        json.dump(item, f, ensure_ascii=False, indent=4)
 
 def search_wad_dir(dir):
     file_paths = []
@@ -22,7 +20,6 @@ def search_wad_dir(dir):
             [os.path.join(root, file) for file in files if is_mod(file)]
         )
     return file_paths
-
 
 def load_wad(dir):
     loaded_wad = {
@@ -39,31 +36,34 @@ def load_wad(dir):
         loaded_wad.update(file_path=None, error='No mod file found (.wad or .pk3)')
     return loaded_wad
 
-
-def wad_loader():
-    return [load_wad(os.path.join(WADS_PATH, dir)) for dir in os.listdir(WADS_PATH)
-                                                   if os.path.isdir(os.path.join(WADS_PATH, dir))]
-
-
-def save_wad(item):
-    metadata_file_path = os.path.join(item['path'], 'metadata.json')
-    with open(metadata_file_path, 'w+', encoding='utf-8') as f:
-        json.dump(item, f, ensure_ascii=False, indent=4)
-
-
 class Wads(Model):
+    WADS_LOADED = 'WADS_LOADED'
+    WADS_LOADED_ALL = 'WADS_LOADED_ALL'
+    WADS_SELECTED = 'SELECT_WAD'
+    WADS_CREATED = 'CREATE_WAD'
+    WADS_DOWNLOAD_PROGRESS = 'DOWNLOAD_PROGRESS'
+    WADS_DOWNLOAD_FINISHED = 'DOWNLOAD_FINISHED'
+    WADS_REMOVE = 'REMOVE_WAD'
+
     def __init__(self):
-        Model.__init__(self, loader=wad_loader, saver=save_wad)
-        self.load()
+        Model.__init__(self, saver=save_wad)
         self.wad_dir_files = []
         self.current_idgames_wad_id = None
         self.load_ordered_files = []
+        wad_loader_worker_wrapper([self.wad_loaded], [self.wad_loaded_all])
+
+    def wad_loaded(self, obj):
+        id = self.create(**obj)
+        self.broadcast((self.WADS_LOADED, self.find(id)))
+
+    def wad_loaded_all(self):
+        self.broadcast((self.WADS_LOADED_ALL, None))
 
     def select_wad(self, id):
         selected_wad = self.find(id)
         self.load_ordered_files = selected_wad['file_paths']
 
-        self.broadcast(('SELECT_WAD', selected_wad))
+        self.broadcast((self.WADS_SELECTED, selected_wad))
 
     def extract_archive(self, file_path, should_remove_archive=False, item={}):
         def handle_import_wad(wad_dir):
@@ -78,7 +78,7 @@ class Wads(Model):
     def import_wad(self, wad_dir, item={}):
         id = self.create(**load_wad(wad_dir), **item)
         self.save(id)
-        self.broadcast(('CREATE_WAD', id))
+        self.broadcast((WADS_CREATED, id))
 
     def idgames_download(self, item, mirror=None):
         id = item['id']
@@ -132,8 +132,8 @@ class Wads(Model):
 
     def remove(self, id):
         wad = self.delete(id)
-        self.broadcast(('REMOVE_WAD', wad))
-        shutil.rmtree(wad['path'])
+        self.broadcast((self.WADS_REMOVE, wad))
+        # shutil.rmtree(wad['path'])
 
     def set_load_order(self, files):
         self.load_ordered_files = files
