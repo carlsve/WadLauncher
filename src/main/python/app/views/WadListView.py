@@ -3,11 +3,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel
 
 from app.helpers.StackedWidgetSelector import widget_changed, display_widget, WidgetIndices
-from app.helpers.WadItemFactory import make_wad_item
+from app.helpers.ItemFactory import make_wad_item, ID_ROLE
 from app.helpers.ContextMenuFactory import make_context_menu
 
 LIST_ITEM_FLAGS = Qt.ItemIsSelectable | Qt.ItemIsEnabled
-ID_ROLE = Qt.UserRole + 1
 
 class WadListView:
     def __init__(self, root, controller):

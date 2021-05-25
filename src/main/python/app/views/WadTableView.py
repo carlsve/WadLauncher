@@ -5,14 +5,13 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 from app.AppContext import AppContext
 from app.helpers.StackedWidgetSelector import add_widget
-from app.helpers.WadItemFactory import make_wad_item
+from app.helpers.ItemFactory import make_wad_item, ID_ROLE
 from app.helpers.ContextMenuFactory import make_context_menu
 
 template_path = AppContext.Instance().get_resource('template/wadtable.ui')
 Form, Base = uic.loadUiType(template_path)
 
 TABLE_ITEM_FLAGS = Qt.ItemIsSelectable | Qt.ItemIsEnabled
-ID_ROLE = Qt.UserRole + 1
 
 class WadTableSortFilterProxyModel(QSortFilterProxyModel):
     def __init__(self, parent=None):
