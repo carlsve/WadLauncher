@@ -133,7 +133,7 @@ class WadTreeView(Base, Form):
         parent = self.id_item_mapping[parent_id]
         item = self.id_item_mapping.pop(id)
         item_row = item.row()
-        for row in range(item.rowCount()):
+        for row in reversed(range(item.rowCount())):
             child = item.takeChild(row)
             parent.insertRow(item_row + 1, child)
         parent.removeRow(item_row)
@@ -205,6 +205,10 @@ class WadTreeView(Base, Form):
                 child_item.setData(child_id, ID_ROLE)
                 self.pending_children[child_id] = child_item
             item.appendRow(child_item)
+
+        if data['id'] not in self.loaded_categories:
+            index = self.wadtree_model.indexFromItem(item)
+            self.wadtree.expand(index)
 
     def finish_loading(self, model_type):
         self.finished_loading[model_type] = True

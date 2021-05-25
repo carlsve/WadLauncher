@@ -25,10 +25,11 @@ class Categories(Model):
         self.broadcast((self.LOADED_ALL, None))
 
     def remove(self, id, parent_id):
+        row = self.find(parent_id)['children'].index(id)
         self.remove_child(parent_id, id)
         children = self.find(id)['children']
-        for child in children:
-            self.add_child(parent_id, child)
+        for child in reversed(children):
+            self.insert_child(parent_id, child, row)
         self.delete(id)
         category_saver_worker_wrapper(self.all())
         self.broadcast((self.REMOVE, (parent_id, id)))
