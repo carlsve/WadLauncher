@@ -31,7 +31,6 @@ class WadTreeView(Base, Form):
         self.pending_children = {}
         self.finished_loading = { 'categories': False, 'wads': False }
         self.id_item_mapping = {}
-        self.temp_move_storage = { 'from': None, 'to': None }
 
         self.wadtree = self.findChild(QTreeView, 'wadtree')
         self.wadtree.dropEvent = self.dropEvent
