@@ -4,8 +4,6 @@ from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
-from app.views.viewmodels.ComboBoxModel import *
-
 ID_ROLE = Qt.UserRole + 1
 
 class LaunchBarView:
