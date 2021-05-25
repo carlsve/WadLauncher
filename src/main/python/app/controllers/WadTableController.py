@@ -18,7 +18,7 @@ class WadTableController:
         elif action == self.wads.LOADED:
             self.view.appendRow(data)
 
-    def remove_wad(self, wad):
-        self.wads.remove(wad['id'])
+    def remove_wad(self, id):
+        self.wads.remove(id)
 
 sys.modules[__name__] = WadTableController()

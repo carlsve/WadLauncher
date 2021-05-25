@@ -22,7 +22,7 @@ class WadListController:
         elif action == self.wads.LOADED:
             self.view.appendWad(data)
 
-    def remove_wad(self, wad):
-        self.wads.remove(wad['id'])
+    def remove_wad(self, id):
+        self.wads.remove(id)
 
 sys.modules[__name__] = WadListController()

@@ -5,13 +5,14 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 from app.AppContext import AppContext
 from app.helpers.StackedWidgetSelector import add_widget
-from app.helpers.WadItemFactory import make_wad_item, DATA_ROLE
+from app.helpers.WadItemFactory import make_wad_item
 from app.helpers.ContextMenuFactory import make_context_menu
 
 template_path = AppContext.Instance().get_resource('template/wadtable.ui')
 Form, Base = uic.loadUiType(template_path)
 
 TABLE_ITEM_FLAGS = Qt.ItemIsSelectable | Qt.ItemIsEnabled
+ID_ROLE = Qt.UserRole + 1
 
 class WadTableSortFilterProxyModel(QSortFilterProxyModel):
     def __init__(self, parent=None):
@@ -78,13 +79,14 @@ class WadTableView(Base, Form):
     def open_menu(self, pos):
         if self.selected_item == None:
             return
-        item = self.selected_item.data(DATA_ROLE)
+        id = self.selected_item.data(ID_ROLE)
+        wad = self.wads.find(id)
 
-        wad_string = item.get('title') or item.get('name')
+        wad_string = wad.get('title') or wad.get('name')
         remove_wad_string = 'Remove ({})'.format(wad_string)
         def remove_wad():
             self.wadtable_model.removeRow(self.selected_item.row())
-            self.controller.remove_wad(item)
+            self.controller.remove_wad(id)
         menu_actions = [(remove_wad_string, remove_wad)]
 
         execute_menu = make_context_menu(self.wadtable, menu_actions)
@@ -100,7 +102,7 @@ class WadTableView(Base, Form):
         item = self.wadtable_model.itemFromIndex(index)
 
         self.selected_item = item
-        self.wads.select_wad(item.data(DATA_ROLE)['id'])
+        self.wads.select_wad(item.data(ID_ROLE))
 
     def appendRow(self, wad):
         item = make_wad_item(wad, TABLE_ITEM_FLAGS)
@@ -114,5 +116,5 @@ class WadTableView(Base, Form):
     def remove_item(self, wad):
         for row in range(self.wadtable_model.rowCount()):
             item = self.wadtable_model.item(row)
-            if item and item.data(DATA_ROLE)['id'] == wad['id']:
+            if item and item.data(ID_ROLE) == wad['id']:
                 self.wadtable_model.removeRow(row)

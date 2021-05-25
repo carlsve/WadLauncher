@@ -6,7 +6,7 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from app.AppContext import AppContext
 from app.helpers.StackedWidgetSelector import add_widget
 from app.helpers.ContextMenuFactory import make_context_menu
-from app.helpers.WadItemFactory import make_wad_item, DATA_ROLE
+from app.helpers.WadItemFactory import make_wad_item
 from app.views.widgets.promoted.DeselectableTreeView import DeselectableTreeView
 
 template_path = AppContext.Instance().get_resource('template/wadtree.ui')
