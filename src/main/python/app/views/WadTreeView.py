@@ -6,15 +6,13 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from app.AppContext import AppContext
 from app.helpers.StackedWidgetSelector import add_widget
 from app.helpers.ContextMenuFactory import make_context_menu
-from app.helpers.WadItemFactory import make_wad_item
+from app.helpers.ItemFactory import make_wad_item, make_pending_item, make_category_item, ID_ROLE, TYPE_ROLE
 from app.views.widgets.promoted.DeselectableTreeView import DeselectableTreeView
 
 template_path = AppContext.Instance().get_resource('template/wadtree.ui')
 Form, Base = uic.loadUiType(template_path)
 
 TREE_WAD_FLAGS = Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemNeverHasChildren
-ID_ROLE = Qt.UserRole + 1
-TYPE_ROLE = Qt.UserRole + 2
 
 class WadTreeView(Base, Form):
     def __init__(self, root, controller, parent=None):
@@ -111,8 +109,7 @@ class WadTreeView(Base, Form):
         parent.removeRow(item.row())
     
     def new_wad(self, data):
-        item = self.make_tree_item(data.get('title', data['name']), data)
-        item.setFlags(TREE_WAD_FLAGS)
+        item = self.make_tree_item(data)
         self.root.appendRow(item)
         self.categories.add_child(self.root.data(ID_ROLE), data['id'])
         self.categories.save()
@@ -124,10 +121,7 @@ class WadTreeView(Base, Form):
         self.categories.new(item.data(ID_ROLE))
 
     def category_added(self, parent_id, data):
-        item = self.make_tree_item(data['name'], data)
-        nameItemFont = item.font()
-        nameItemFont.setBold(True)
-        item.setFont(nameItemFont)
+        item = self.make_tree_item(data)
         self.id_item_mapping[parent_id].appendRow(item)
 
     def remove_category(self, id):
@@ -167,11 +161,8 @@ class WadTreeView(Base, Form):
 
     def appendWad(self, data):
         if data['id'] in self.pending_children:
-            item = self.pending_children.pop(data['id'])
-            item.setText(data.get('title', data['name']))
-            item.setData(data['model_type'], TYPE_ROLE)
-            item.setFlags(TREE_WAD_FLAGS)
-            self.id_item_mapping[data['id']] = item
+            from_item = self.pending_children.pop(data['id'])
+            item = self.make_tree_item(data, from_item=from_item)
         else:
             self.loaded_wads[data['id']] = data
 
@@ -179,35 +170,25 @@ class WadTreeView(Base, Form):
         is_root = data.get('is_root', 'False') == 'True'
         item = None
         if is_root:
-            item = self.root
-            item.setData(data['id'], ID_ROLE)
-            item.setData(data['model_type'], TYPE_ROLE)
+            item = self.make_tree_item(data, self.root)
+            self.root = item
         elif data['id'] in self.pending_children:
-            item = self.pending_children.pop(data['id'])
-            item.setText(data.get('title', data['name']))
-            item.setData(data['model_type'], TYPE_ROLE)
+            from_item = self.pending_children.pop(data['id'])
+            item = self.make_tree_item(data, from_item=from_item)
         else:
-            item = self.make_tree_item(data['name'], data)
+            item = self.make_tree_item(data)
             self.loaded_categories[data['id']] = item
-
-        self.id_item_mapping[data['id']] = item
-        if not is_root:
-            nameItemFont = item.font()
-            nameItemFont.setBold(True)
-            item.setFont(nameItemFont)
 
         for child_id in data['children']:
             child_item = None
             if child_id in self.loaded_wads:
                 wad = self.loaded_wads.pop(child_id)
-                child_item = self.make_tree_item(wad['name'], wad)
+                child_item = self.make_tree_item(wad)
                 child_item.setFlags(TREE_WAD_FLAGS)
-                self.id_item_mapping[data['id']] = item
             elif child_id in self.loaded_categories:
                 child_item = self.loaded_categories.pop(child_id)
             else:
-                child_item = QStandardItem('loading... ')
-                child_item.setData(child_id, ID_ROLE)
+                child_item = self.make_tree_item({ 'id': child_id })
                 self.pending_children[child_id] = child_item
             item.appendRow(child_item)
 
@@ -223,16 +204,12 @@ class WadTreeView(Base, Form):
         for wad in self.loaded_wads.values():
             if wad['id'] in self.pending_children:
                 item = self.pending_children.pop(wad['id'])
-                item.setText(wad['name'])
-                item.setData(wad['model_type'], TYPE_ROLE)
-                item.setFlags(TREE_WAD_FLAGS)
-                self.id_item_mapping[wad['id']] = item
+                self.make_tree_item(wad, from_item=item)
             else:
-                item = self.make_tree_item(wad['name'], wad)
+                item = self.make_tree_item(wad)
                 self.root.appendRow(item)
                 wads_missing_categories = True
                 self.categories.add_child(root_id, wad['id'])
-                self.id_item_mapping[wad['id']] = item
         for category in self.loaded_categories.values():
             self.root.appendRow(category)
             wads_missing_categories = True
@@ -248,9 +225,14 @@ class WadTreeView(Base, Form):
             self.categories.save()
             parent.removeRow(pending_child.row())
 
-    def make_tree_item(self, text, data):
-        item = QStandardItem(text)
-        item.setData(data['id'], ID_ROLE)
-        item.setData(data['model_type'], TYPE_ROLE)
+    def make_tree_item(self, data, from_item=None):
+        item_type = data.get('model_type', 'pending')
+        make_item = {
+            'categories': make_category_item,
+            'wads': lambda data, item: make_wad_item(data, TREE_WAD_FLAGS, item),
+            'pending': make_pending_item
+        }
+        item = make_item[item_type](data, from_item)
         self.id_item_mapping[data['id']] = item
+
         return item
