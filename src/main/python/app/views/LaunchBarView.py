@@ -1,8 +1,7 @@
 import os
 
 from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QPushButton
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtGui import QStandardItemModel
 
 from app.helpers.ItemFactory import make_generic, ID_ROLE
 

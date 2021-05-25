@@ -1,13 +1,12 @@
 from PyQt5 import uic
 from PyQt5.QtWidgets import QTreeView, QAbstractItemView
-from PyQt5.QtCore import Qt, QVariant
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QStandardItemModel
 
 from app.AppContext import AppContext
 from app.helpers.StackedWidgetSelector import add_widget
 from app.helpers.ContextMenuFactory import make_context_menu
 from app.helpers.ItemFactory import make_wad_item, make_pending_item, make_category_item, ID_ROLE, TYPE_ROLE
-from app.views.widgets.promoted.DeselectableTreeView import DeselectableTreeView
 
 template_path = AppContext.Instance().get_resource('template/wadtree.ui')
 Form, Base = uic.loadUiType(template_path)
