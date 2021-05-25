@@ -11,11 +11,11 @@ class WadTableController:
     def wad_subscription(self, msg):
         action, data = msg
 
-        if (action == 'CREATE_WAD'):
+        if action == self.wads.CREATE:
             self.view.appendRow(self.wads.find(data))
-        elif action == 'REMOVE_WAD':
+        elif action == self.wads.REMOVE:
             self.view.remove_item(data)
-        elif action == self.wads.WADS_LOADED:
+        elif action == self.wads.LOADED:
             self.view.appendRow(data)
 
     def remove_wad(self, wad):

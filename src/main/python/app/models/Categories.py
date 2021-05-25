@@ -15,13 +15,13 @@ class Categories(Model):
 
     def __init__(self):
         Model.__init__(self)
-        category_loader_worker_wrapper([self.categories_loaded], [self.categories_loaded_all])
+        category_loader_worker_wrapper([self.loaded], [self.loaded_all])
 
-    def categories_loaded(self, obj):
+    def loaded(self, obj):
         id = self.create(**obj)
         self.broadcast((self.LOADED, self.find(id)))
 
-    def categories_loaded_all(self):
+    def loaded_all(self):
         self.broadcast((self.LOADED_ALL, None))
 
     def remove(self, id, parent_id):

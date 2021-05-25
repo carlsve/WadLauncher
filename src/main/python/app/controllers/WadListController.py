@@ -15,11 +15,11 @@ class WadListController:
     def subscription(self, msg):
         action, data = msg
 
-        if (action == self.wads.WADS_CREATED):
+        if action == self.wads.CREATE:
             self.view.appendWad(self.wads.find(data))
-        elif action == 'REMOVE_WAD':
+        elif action == self.wads.REMOVE:
             self.view.remove_item(data)
-        elif action == self.wads.WADS_LOADED:
+        elif action == self.wads.LOADED:
             self.view.appendWad(data)
 
     def remove_wad(self, wad):

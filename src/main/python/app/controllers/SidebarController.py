@@ -15,7 +15,7 @@ class SidebarController:
     def subscription(self, args):
         action, data = args
 
-        if action == 'SELECT_WAD':
+        if action == self.wads.SELECTED:
             self.view.show_dir(data)
  
     def random_clicked(self):

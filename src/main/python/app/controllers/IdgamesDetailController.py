@@ -19,17 +19,17 @@ class IdgamesDetailController:
     def wads_listener(self, args):
         action, data = args
 
-        if action in ['RANDOM_WAD', 'DETAIL_WAD']:
+        if action in [self.wads.RANDOM, self.wads.DETAIL]:
             result, err = data
             self.data = result
             already_downloaded = bool(self.wads.find_by(id=result['id']))
             self.view.set_data(result, already_downloaded)
             display_widget(self.root, WidgetIndices.IDGAMES_DETAIL)
-        elif action == 'DOWNLOAD_PROGRESS':
+        elif action == self.wads.DOWNLOAD_PROGRESS:
             id, progress = data
             if id == self.view.idgames_response_widget.id:
                 self.view.idgames_response_widget.download_progress(*progress)
-        elif action == 'DOWNLOAD_FINISHED':
+        elif action == self.wads.DOWNLOAD_FINISHED:
             id = data
             if id == self.view.idgames_response_widget.id:
                 self.view.idgames_response_widget.download_finished()

@@ -13,13 +13,13 @@ class WadTreeController:
     def subscription(self, msg):
         action, data = msg
 
-        if action == self.models.wads.WADS_LOADED:
+        if action == self.models.wads.LOADED:
             self.view.appendWad(data)
-        elif action == self.models.wads.WADS_LOADED_ALL:
+        elif action == self.models.wads.LOADED_ALL:
             self.view.finish_loading('wads')
-        elif action == self.models.wads.WADS_REMOVE:
+        elif action == self.models.wads.REMOVE:
             self.view.wad_removed(data)
-        elif action == self.models.wads.WADS_CREATED:
+        elif action == self.models.wads.CREATE:
             self.view.new_wad(self.models.wads.find(data))
         elif action == self.models.categories.LOADED:
             self.view.appendCategory(data)

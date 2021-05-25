@@ -20,15 +20,15 @@ class LaunchBarController:
     def subscription(self, message):
         action, data = message
 
-        if action == 'SELECT_WAD':
+        if action == self.models.wads.SELECTED:
             self.view.update_selected_wad(data)
-        elif action == self.models.iwads.IWAD_LOADED:
+        elif action == self.models.iwads.LOADED:
             self.view.append_iwad(data)
-        elif action == self.models.iwads.IWAD_LOADED_ALL:
+        elif action == self.models.iwads.LOADED_ALL:
             pass
-        elif action == self.models.source_ports.SOURCE_PORTS_LOADED:
+        elif action == self.models.source_ports.LOADED:
             self.view.append_source_port(data)
-        elif action == self.models.source_ports.SOURCE_PORTS_LOADED_ALL:
+        elif action == self.models.source_ports.LOADED_ALL:
             pass
 
     def select_iwad(self, id):
