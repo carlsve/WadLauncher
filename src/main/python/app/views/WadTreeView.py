@@ -68,17 +68,17 @@ class WadTreeView(Base, Form):
 
         indicator = self.wadtree.dropIndicatorPosition()
         if indicator == QAbstractItemView.OnItem:
-            to_item.appendRow(take_from)
             self.categories.add_child(to_item.data(ID_ROLE), from_item.data(ID_ROLE))
+            to_item.appendRow(take_from)
         elif indicator == QAbstractItemView.AboveItem:
-            to_parent.insertRow(to_row + adjust[indicator], take_from)
             self.categories.insert_child(to_parent.data(ID_ROLE), from_item.data(ID_ROLE), to_row + adjust[indicator])
+            to_parent.insertRow(to_row + adjust[indicator], take_from)
         elif indicator == QAbstractItemView.BelowItem:
-            to_parent.insertRow(to_row + adjust[indicator], take_from)
             self.categories.insert_child(to_parent.data(ID_ROLE), from_item.data(ID_ROLE), to_row + adjust[indicator])
+            to_parent.insertRow(to_row + adjust[indicator], take_from)
         elif indicator == QAbstractItemView.OnViewport:
-            to_parent.appendRow(take_from)
             self.categories.add_child(to_parent.data(ID_ROLE), from_item.data(ID_ROLE))
+            to_parent.appendRow(take_from)
 
         self.categories.save()
 
@@ -97,20 +97,31 @@ class WadTreeView(Base, Form):
             self.wads.select_wad(item.data(ID_ROLE))
 
     def remove_wad(self, item):
-        parent = item.parent() or self.root
-        self.categories.remove_child(parent.data(ID_ROLE), item.data(ID_ROLE))
-        self.categories.save()
         self.wads.remove(item.data(ID_ROLE))
 
     def wad_removed(self, data):
         item = self.id_item_mapping[data['id']]
         parent = item.parent() or self.root
+        self.categories.remove_child(parent.data(ID_ROLE), item.data(ID_ROLE))
         parent.removeRow(item.row())
+        self.categories.save()
     
-    def new_wad(self, data):
+    def import_wad(self, id, parent_name):
+        data = self.wads.find(id)
         item = self.make_tree_item(data)
-        self.root.appendRow(item)
-        self.categories.add_child(self.root.data(ID_ROLE), data['id'])
+        parent = self.categories.find_by(name=parent_name)
+        parent_item = None
+        if not parent:
+            parent_id = self.categories.create(name=parent_name, children=[])
+            parent_item = self.make_tree_item(self.categories.find(parent_id))
+            self.root.appendRow(parent_item)
+            self.categories.add_child(self.root.data(ID_ROLE), parent_item.data(ID_ROLE))
+        else:
+            parent_item = self.id_item_mapping[parent['id']]
+        index = self.wadtree_model.indexFromItem(parent_item)
+        self.wadtree.expand(index)
+        self.categories.add_child(parent_item.data(ID_ROLE), data['id'])
+        parent_item.appendRow(item)
         self.categories.save()
 
     def new_category(self, index):
@@ -206,13 +217,13 @@ class WadTreeView(Base, Form):
                 self.make_tree_item(wad, from_item=item)
             else:
                 item = self.make_tree_item(wad)
+                self.categories.add_child(root_id, wad['id'])
                 self.root.appendRow(item)
                 wads_missing_categories = True
-                self.categories.add_child(root_id, wad['id'])
         for category in self.loaded_categories.values():
+            self.categories.add_child(root_id, category.data(ID_ROLE))
             self.root.appendRow(category)
             wads_missing_categories = True
-            self.categories.add_child(root_id, category.data(ID_ROLE))
         if wads_missing_categories:
             self.categories.save()
 
@@ -221,8 +232,8 @@ class WadTreeView(Base, Form):
             parent_id = parent.data(ID_ROLE)
             
             self.categories.remove_child(parent_id, pending_child.data(ID_ROLE))
-            self.categories.save()
             parent.removeRow(pending_child.row())
+            self.categories.save()
 
     def make_tree_item(self, data, from_item=None):
         item_type = data.get('model_type', 'pending')
