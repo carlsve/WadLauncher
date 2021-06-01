@@ -62,7 +62,7 @@ class Wads(Model):
             category_name = 'idgames/download'
             if detail_type == self.RANDOM:
                 category_name = 'idgames/random'
-            elif detail_type != None
+            elif detail_type != None:
                 category_name = detail_type
             self.broadcast((self.IMPORT, (id, category_name)))
 
