@@ -34,7 +34,7 @@ class CategoryLoaderWorker(QThread):
             root_id = str(uuid.uuid1())
             cfg.add_section(root_id)
             cfg.set(root_id, 'id', root_id)
-            cfg.set(root_id, 'is_root', 'True')
+            cfg.set(root_id, 'is_root', 'yes')
             cfg.set(root_id, 'name', 'root')
             cfg.set(root_id, 'children', '[]')
             cfg.set(root_id, 'warning', 'If you remove this section, the app will no longer recognize other categories.')
@@ -46,6 +46,7 @@ class CategoryLoaderWorker(QThread):
             category = dict(cfg[section])
             children_str = category['children']
             category['children'] = json.loads(children_str)
+            category['is_root'] = cfg[section].getboolean('is_root')
             self.progress.emit(category)
 
         self.done.emit(None)

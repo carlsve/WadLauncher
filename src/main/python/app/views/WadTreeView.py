@@ -177,7 +177,7 @@ class WadTreeView(Base, Form):
             self.loaded_wads[data['id']] = data
 
     def appendCategory(self, data):
-        is_root = data.get('is_root', 'False') == 'True'
+        is_root = data.get('is_root', False)
         item = None
         if is_root:
             item = self.make_tree_item(data, self.root)

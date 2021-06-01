@@ -35,7 +35,8 @@ class CategorySaverWorker(QThread):
             if not cfg.has_section(id):
                 cfg.add_section(id)
             cfg.set(id, 'id', id)
-            cfg.set(id, 'is_root', item.get('is_root', 'False'))
+            is_root = 'yes' if item.get('is_root', False) else 'no'
+            cfg.set(id, 'is_root', is_root)
             cfg.set(id, 'name', item['name'])
             cfg.set(id, 'children', json.dumps(item['children']))
 
