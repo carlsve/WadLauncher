@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QLabel
 from PyQt5.QtCore import Qt
 
 from app.AppContext import AppContext
-from app.helpers.StackedWidgetSelector import add_widget, WidgetIndices
+from app.helpers.StackedWidgetSelector import add_widget
 from app.views.widgets.SearchResultWidget import SearchResultWidget
 from app.views.widgets.SearchBar import SearchBar
 

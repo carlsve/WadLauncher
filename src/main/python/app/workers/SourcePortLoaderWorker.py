@@ -1,4 +1,4 @@
-import os, glob
+import os
 
 from PyQt5.QtCore import QThread, pyqtSignal
 

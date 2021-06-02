@@ -1,7 +1,7 @@
-import glob, os, functools, sys
+import sys
 
 from core.base.Model import Model
-from app.config import Config
+
 from app.workers.IwadLoaderWorker import iwad_loader_worker_wrapper
 from app.schemas.Iwad import Iwad
 

@@ -1,4 +1,4 @@
-import sys, os
+import os
 
 from core.utils.strings import snake_casify
 

@@ -1,7 +1,7 @@
 from PyQt5 import uic
 
 from app.AppContext import AppContext
-from app.helpers.StackedWidgetSelector import add_widget, WidgetIndices
+from app.helpers.StackedWidgetSelector import add_widget
 
 template_path = AppContext.Instance().get_resource('template/welcome.ui')
 Form, Base = uic.loadUiType(template_path)

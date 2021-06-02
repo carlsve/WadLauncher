@@ -1,6 +1,6 @@
 # Doomworld idgames public api worker wrapper.
 # Documentation: https://www.doomworld.com/idgames/api/
-import requests, os, enum, re
+import requests, enum, re
 
 from PyQt5.QtCore import QThread, pyqtSignal
 from app.workers.WorkerPool import *

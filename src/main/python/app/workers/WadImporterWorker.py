@@ -1,4 +1,4 @@
-import os, json, uuid
+import os, json
 
 from PyQt5.QtCore import QThread, pyqtSignal
 

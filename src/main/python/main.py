@@ -1,4 +1,4 @@
-import sys, os, subprocess
+import sys, os
 
 from PyQt5 import QtWidgets, uic
 

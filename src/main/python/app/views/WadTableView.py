@@ -1,6 +1,6 @@
 from PyQt5 import uic
 from PyQt5.QtWidgets import QTableView, QLineEdit, QAbstractItemView
-from PyQt5.QtCore import Qt, QModelIndex, QItemSelectionModel, QSortFilterProxyModel
+from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 from app.AppContext import AppContext

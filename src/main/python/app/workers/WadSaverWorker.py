@@ -1,9 +1,7 @@
-import os, json, uuid
-from dataclasses import asdict
+import os, json
 
 from PyQt5.QtCore import QThread, pyqtSignal
 
-from app.config import Config
 from app.workers.WorkerPool import *
 
 def wad_saver_worker_wrapper(wad, progress_handlers=[], done_handlers=[]):

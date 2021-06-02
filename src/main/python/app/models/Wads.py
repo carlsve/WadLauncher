@@ -1,8 +1,7 @@
-import os, sys, json, shutil
+import sys
 
 from core.base.Model import Model, singularizable, singularize
 
-from app.config import Config
 from app.workers.DWApiWorker import api_worker_wrapper, DWApiMethod
 from app.workers.DownloadWorker import download_worker_wrapper
 from app.workers.ArchiveExtractorWorker import archive_extractor_worker_wrapper

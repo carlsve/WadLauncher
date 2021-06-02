@@ -1,4 +1,4 @@
-import sys, os
+import sys
 
 from core.base.Model import Model
 from app.workers.SourcePortLoaderWorker import source_port_loader_worker_wrapper

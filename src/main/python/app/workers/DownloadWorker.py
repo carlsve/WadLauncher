@@ -1,6 +1,6 @@
 import pathlib, os, urllib
 
-from PyQt5.QtCore import QThread, pyqtSignal, QThreadPool
+from PyQt5.QtCore import QThread, pyqtSignal
 
 from app.config import Config
 from app.workers.WorkerPool import *

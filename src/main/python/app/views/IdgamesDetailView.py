@@ -2,7 +2,7 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QVBoxLayout, QPlainTextEdit, QButtonGroup, QRadioButton
 
 from app.AppContext import AppContext
-from app.helpers.StackedWidgetSelector import add_widget, WidgetIndices
+from app.helpers.StackedWidgetSelector import add_widget
 from app.views.widgets.IdgamesResponseWidget import IdgamesResponseWidget
 
 template_path = AppContext.Instance().get_resource('template/idgames_detail.ui')

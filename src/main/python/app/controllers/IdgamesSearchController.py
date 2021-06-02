@@ -2,7 +2,6 @@ import sys
 
 from app.views.IdgamesSearchView import IdgamesSearchView
 
-from app.workers.DWApiWorker import DWApiMethod, api_worker_wrapper
 from app.workers.DownloadWorker import *
 from app.helpers.StackedWidgetSelector import *
 

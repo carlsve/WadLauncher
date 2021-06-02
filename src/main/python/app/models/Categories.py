@@ -1,9 +1,7 @@
-import sys, json, os, uuid
-
-from configparser import ConfigParser
+import sys
 
 from core.base.Model import Model, singularize, singularizable
-from app.config import Config
+
 from app.workers.CategoryLoaderWorker import category_loader_worker_wrapper
 from app.workers.CategorySaverWorker import category_saver_worker_wrapper
 from app.schemas.Category import Category
