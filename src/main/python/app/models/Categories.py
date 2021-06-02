@@ -6,6 +6,7 @@ from core.base.Model import Model
 from app.config import Config
 from app.workers.CategoryLoaderWorker import category_loader_worker_wrapper
 from app.workers.CategorySaverWorker import category_saver_worker_wrapper
+from app.schemas.Category import Category
 
 class Categories(Model):
     LOADED = 'CATEGORIES_LOADED'
@@ -14,7 +15,7 @@ class Categories(Model):
     REMOVE = 'CATEGORIES_REMOVE'
 
     def __init__(self):
-        Model.__init__(self)
+        Model.__init__(self, schema=Category)
         category_loader_worker_wrapper([self.loaded], [self.loaded_all])
 
     def loaded(self, obj):
@@ -25,9 +26,9 @@ class Categories(Model):
         self.broadcast((self.LOADED_ALL, None))
 
     def remove(self, id, parent_id):
-        row = self.find(parent_id)['children'].index(id)
+        row = self.find(parent_id).children.index(id)
         self.remove_child(parent_id, id)
-        children = self.find(id)['children']
+        children = self.find(id).children
         for child in reversed(children):
             self.insert_child(parent_id, child, row)
         self.delete(id)
@@ -35,23 +36,23 @@ class Categories(Model):
         self.broadcast((self.REMOVE, (parent_id, id)))
     
     def new(self, parent_id, name='new category'):
-        id = self.create(name=name, children=[])
+        id = self.create(name=name)
         self.add_child(parent_id, id)
         self.broadcast((self.NEW, (parent_id, self.find(id))))
         category_saver_worker_wrapper(self.all())
 
     def add_child(self, id, child_id):
-        children = self.find(id)['children']
+        children = self.find(id).children
         children.append(child_id)
         self.update(id, children=children)
     
     def remove_child(self, id, child_id):
-        children = self.find(id)['children']
+        children = self.find(id).children
         children.remove(child_id)
         self.update(id, children=children)
     
     def insert_child(self, id, child_id, index):
-        children = self.find(id)['children']
+        children = self.find(id).children
         children.insert(index, child_id)
         self.update(id, children=children)
 

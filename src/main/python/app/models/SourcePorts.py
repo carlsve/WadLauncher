@@ -2,13 +2,14 @@ import sys, os
 
 from core.base.Model import Model
 from app.workers.SourcePortLoaderWorker import source_port_loader_worker_wrapper
+from app.schemas.SourcePort import SourcePort
 
 class SourcePorts(Model):
     LOADED = 'SOURCE_PORTS_LOADED'
     LOADED_ALL = 'SOURCE_PORTS_LOADED_ALL'
 
     def __init__(self):
-        Model.__init__(self)
+        Model.__init__(self, schema=SourcePort)
         source_port_loader_worker_wrapper([self.loaded], [self.loaded_all])
     
     def loaded(self, obj):

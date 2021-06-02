@@ -3,7 +3,7 @@ import os
 from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QPushButton
 from PyQt5.QtGui import QStandardItemModel
 
-from app.helpers.ItemFactory import make_generic, ID_ROLE
+from app.helpers.ItemFactory import make_iwad_item, make_source_port_item, ID_ROLE
 
 class LaunchBarView:
     def __init__(self, root, controller):
@@ -32,7 +32,7 @@ class LaunchBarView:
         launch_wad_button.clicked.connect(self.controller.launch_wad_press)
 
     def append_iwad(self, data):
-        item = make_generic(data['name'], data['id'])
+        item = make_iwad_item(data)
         self.iwad_selector_model.appendRow(item)
     
     def select_iwad(self, index):
@@ -40,7 +40,7 @@ class LaunchBarView:
         self.controller.select_iwad(item.data(ID_ROLE))
 
     def append_source_port(self, data):
-        item = make_generic(data['name'], data['id'])
+        item = make_source_port_item(data)
         self.source_port_selector_model.appendRow(item)
     
     def select_source_port(self, index):
@@ -51,4 +51,4 @@ class LaunchBarView:
         if wad == None:
             self.selected_wad_name.setText('No wad selected')
         else:
-            self.selected_wad_name.setText((wad.get('title') or wad['name']) + ' ({})'.format(os.path.basename(wad['file_path'])))
+            self.selected_wad_name.setText((wad.title or wad.name) + ' ({})'.format(os.path.basename(wad.file_path)))

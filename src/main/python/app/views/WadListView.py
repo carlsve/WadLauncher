@@ -51,7 +51,7 @@ class WadListView:
         id = self.selected_item.data(ID_ROLE)
         wad = self.wads.find(id)
 
-        wad_string = wad.get('title') or wad.get('name')
+        wad_string = wad.display_name()
         remove_wad_string = 'Remove ({})'.format(wad_string)
         def remove_wad():
             self.wadlist_model.removeRow(self.selected_item.row())
@@ -78,7 +78,7 @@ class WadListView:
     def remove_item(self, wad):
         for row in range(self.wadlist_model.rowCount()):
             item = self.wadlist_model.item(row)
-            if item and item.data(ID_ROLE) == wad['id']:
+            if item and item.data(ID_ROLE) == wad.id:
                 self.wadlist_model.removeRow(row)
 
     def import_wads(self, wads):

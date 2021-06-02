@@ -1,5 +1,6 @@
 import sys, json, os, uuid
 from configparser import ConfigParser
+from dataclasses import asdict
 
 from PyQt5.QtCore import QThread, pyqtSignal
 
@@ -26,7 +27,7 @@ class CategorySaverWorker(QThread):
         config = Config.Instance()
         base_path = os.path.expanduser(config['PATHS']['BASE_PATH'])
         self.path = os.path.join(base_path, 'user_categories.ini')
-        self.items = items
+        self.items = [asdict(item) for item in items]
 
     def run(self):
         cfg = ConfigParser(allow_no_value=True)
@@ -35,7 +36,8 @@ class CategorySaverWorker(QThread):
             if not cfg.has_section(id):
                 cfg.add_section(id)
             cfg.set(id, 'id', id)
-            cfg.set(id, 'is_root', item.get('is_root', 'False'))
+            is_root = 'yes' if item.get('is_root', False) else 'no'
+            cfg.set(id, 'is_root', is_root)
             cfg.set(id, 'name', item['name'])
             cfg.set(id, 'children', json.dumps(item['children']))
 

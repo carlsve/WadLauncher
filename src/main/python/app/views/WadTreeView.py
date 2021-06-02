@@ -2,6 +2,7 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QTreeView, QAbstractItemView
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel
+from dataclasses import dataclass
 
 from app.AppContext import AppContext
 from app.helpers.StackedWidgetSelector import add_widget
@@ -12,6 +13,11 @@ template_path = AppContext.Instance().get_resource('template/wadtree.ui')
 Form, Base = uic.loadUiType(template_path)
 
 TREE_WAD_FLAGS = Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemNeverHasChildren
+
+@dataclass
+class Pending:
+    id: str
+    model_type: str = 'pending'
 
 class WadTreeView(Base, Form):
     def __init__(self, root, controller, parent=None):
@@ -85,7 +91,7 @@ class WadTreeView(Base, Form):
     def change_category_text(self, item):
         if all(self.finished_loading.values()):
             item_text = item.text()
-            if item.data(TYPE_ROLE) == 'categories' and self.categories.find(item.data(ID_ROLE))['name'] != item_text:
+            if item.data(TYPE_ROLE) == 'categories' and self.categories.find(item.data(ID_ROLE)).name != item_text:
                 self.controller.edit_category(item.data(ID_ROLE), name=item_text)
 
     def select_tree_index(self, selection):
@@ -100,7 +106,7 @@ class WadTreeView(Base, Form):
         self.wads.remove(item.data(ID_ROLE))
 
     def wad_removed(self, data):
-        item = self.id_item_mapping[data['id']]
+        item = self.id_item_mapping[data.id]
         parent = item.parent() or self.root
         self.categories.remove_child(parent.data(ID_ROLE), item.data(ID_ROLE))
         parent.removeRow(item.row())
@@ -117,10 +123,10 @@ class WadTreeView(Base, Form):
             self.root.appendRow(parent_item)
             self.categories.add_child(self.root.data(ID_ROLE), parent_item.data(ID_ROLE))
         else:
-            parent_item = self.id_item_mapping[parent['id']]
+            parent_item = self.id_item_mapping[parent.id]
         index = self.wadtree_model.indexFromItem(parent_item)
         self.wadtree.expand(index)
-        self.categories.add_child(parent_item.data(ID_ROLE), data['id'])
+        self.categories.add_child(parent_item.data(ID_ROLE), data.id)
         parent_item.appendRow(item)
         self.categories.save()
 
@@ -159,10 +165,10 @@ class WadTreeView(Base, Form):
             def remove_wad():
                 self.remove_wad(item)
             def remove_category():
-                self.remove_category(data['id'])
+                self.remove_category(data.id)
             entries_by_model = {
-                'categories': ('Remove category ({})'.format(data.get('name')), remove_category),
-                'wads': ('Remove ({})'.format(data.get('title') or data.get('name')), remove_wad)
+                'categories': ('Remove category ({})'.format(data.name), remove_category),
+                'wads': ('Remove ({})'.format(data.display_name()), remove_wad)
             }
             entries.append(entries_by_model[item.data(TYPE_ROLE).lower()])
 
@@ -170,26 +176,26 @@ class WadTreeView(Base, Form):
         execute_menu(pos)
 
     def appendWad(self, data):
-        if data['id'] in self.pending_children:
-            from_item = self.pending_children.pop(data['id'])
+        if data.id in self.pending_children:
+            from_item = self.pending_children.pop(data.id)
             item = self.make_tree_item(data, from_item=from_item)
         else:
-            self.loaded_wads[data['id']] = data
+            self.loaded_wads[data.id] = data
 
     def appendCategory(self, data):
-        is_root = data.get('is_root', 'False') == 'True'
+        is_root = data.is_root
         item = None
         if is_root:
             item = self.make_tree_item(data, self.root)
             self.root = item
-        elif data['id'] in self.pending_children:
-            from_item = self.pending_children.pop(data['id'])
+        elif data.id in self.pending_children:
+            from_item = self.pending_children.pop(data.id)
             item = self.make_tree_item(data, from_item=from_item)
         else:
             item = self.make_tree_item(data)
-            self.loaded_categories[data['id']] = item
+            self.loaded_categories[data.id] = item
 
-        for child_id in data['children']:
+        for child_id in data.children:
             child_item = None
             if child_id in self.loaded_wads:
                 wad = self.loaded_wads.pop(child_id)
@@ -198,11 +204,11 @@ class WadTreeView(Base, Form):
             elif child_id in self.loaded_categories:
                 child_item = self.loaded_categories.pop(child_id)
             else:
-                child_item = self.make_tree_item({ 'id': child_id })
+                child_item = self.make_tree_item(Pending(id=child_id))
                 self.pending_children[child_id] = child_item
             item.appendRow(child_item)
 
-        if data['id'] not in self.loaded_categories:
+        if data.id not in self.loaded_categories:
             index = self.wadtree_model.indexFromItem(item)
             self.wadtree.expand(index)
 
@@ -212,12 +218,12 @@ class WadTreeView(Base, Form):
         wads_missing_categories = False
         root_id = self.root.data(ID_ROLE)
         for wad in self.loaded_wads.values():
-            if wad['id'] in self.pending_children:
-                item = self.pending_children.pop(wad['id'])
+            if wad.id in self.pending_children:
+                item = self.pending_children.pop(wad.id)
                 self.make_tree_item(wad, from_item=item)
             else:
                 item = self.make_tree_item(wad)
-                self.categories.add_child(root_id, wad['id'])
+                self.categories.add_child(root_id, wad.id)
                 self.root.appendRow(item)
                 wads_missing_categories = True
         for category in self.loaded_categories.values():
@@ -236,13 +242,13 @@ class WadTreeView(Base, Form):
             self.categories.save()
 
     def make_tree_item(self, data, from_item=None):
-        item_type = data.get('model_type', 'pending')
+        item_type = data.model_type
         make_item = {
             'categories': make_category_item,
             'wads': lambda data, item: make_wad_item(data, TREE_WAD_FLAGS, item),
             'pending': make_pending_item
         }
         item = make_item[item_type](data, from_item)
-        self.id_item_mapping[data['id']] = item
+        self.id_item_mapping[data.id] = item
 
         return item

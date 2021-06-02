@@ -1,4 +1,5 @@
 import os, json, uuid
+from dataclasses import asdict
 
 from PyQt5.QtCore import QThread, pyqtSignal
 

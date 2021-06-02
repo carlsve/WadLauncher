@@ -81,7 +81,7 @@ class WadTableView(Base, Form):
         id = self.selected_item.data(ID_ROLE)
         wad = self.wads.find(id)
 
-        wad_string = wad.get('title') or wad.get('name')
+        wad_string = wad.display_name()
         remove_wad_string = 'Remove ({})'.format(wad_string)
         def remove_wad():
             self.wadtable_model.removeRow(self.selected_item.row())
@@ -106,7 +106,7 @@ class WadTableView(Base, Form):
     def appendRow(self, wad):
         item = make_wad_item(wad, TABLE_ITEM_FLAGS)
         def make_column_item(wad, key):
-            return QStandardItem(wad.get(key) or 'unknown')
+            return QStandardItem(getattr(wad, key) or 'unknown')
         column_items = [make_column_item(wad, key) for key in self.keys[1:]]
         items = [item, *column_items]
 
@@ -115,5 +115,5 @@ class WadTableView(Base, Form):
     def remove_item(self, wad):
         for row in range(self.wadtable_model.rowCount()):
             item = self.wadtable_model.item(row)
-            if item and item.data(ID_ROLE) == wad['id']:
+            if item and item.data(ID_ROLE) == wad.id:
                 self.wadtable_model.removeRow(row)

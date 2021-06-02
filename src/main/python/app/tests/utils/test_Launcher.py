@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 import subprocess
 from pathlib import Path
 from app.config import Config
-
+from app.schemas.SourcePort import SourcePort
+from app.schemas.Iwad import Iwad
 from app.utils.Launcher import launch
 
 mock_Instance = MagicMock(return_value={
@@ -20,14 +21,19 @@ mock_files = [
     '~/.wadlauncher/wads/sunder/Guncaster.pk3'
 ]
 mock_file = mock_files[0]
-mock_iwad = { 'path': '~/.iwads/doom2.wad' }
-mock_source_port = {
+mock_iwad_params = { 'name': 'doom2.wad', 'path': '~/.iwads/doom2.wad', 'model_type': 'iwad' }
+mock_iwad = Iwad(**mock_iwad_params)
+
+mock_source_port_params = {
+    'name': 'gzdoom',
     'dir': '~/.sourceports/gzdoom',
     'executable': 'gzdoom',
     'wad_arg': '-file',
     'iwad_arg': '-iwad',
-    'save_arg': '-savedir'
+    'save_arg': '-savedir',
+    'model_type': 'source_port'
 }
+mock_source_port = SourcePort(**mock_source_port_params)
 
 def test_happy_path(monkeypatch):
     monkeypatch.setattr(Config, 'Instance', mock_Instance)
@@ -40,7 +46,7 @@ def test_happy_path(monkeypatch):
     mock_mkdir.assert_called()
 
     process_call = [
-        os.path.join(mock_source_port['dir'], mock_source_port['executable']),
+        os.path.join(mock_source_port_params['dir'], mock_source_port_params['executable']),
         '-file',
         '~/.wadlauncher/wads/sunder/sunder.wad',
         '~/.wadlauncher/wads/sunder/Guncaster.pk3',
@@ -55,7 +61,7 @@ def test_happy_path(monkeypatch):
     # Assert single file works
     launch([mock_file], mock_iwad, mock_source_port)
     process_call = [
-        os.path.join(mock_source_port['dir'], mock_source_port['executable']),
+        os.path.join(mock_source_port_params['dir'], mock_source_port_params['executable']),
         '-file',
         '~/.wadlauncher/wads/sunder/sunder.wad',
         '-iwad',
@@ -73,7 +79,7 @@ def test_no_files(monkeypatch):
     launch([], mock_iwad, mock_source_port)
 
     process_call = [
-        os.path.join(mock_source_port['dir'], mock_source_port['executable']),
+        os.path.join(mock_source_port_params['dir'], mock_source_port_params['executable']),
         '-iwad',
         '~/.iwads/doom2.wad'
     ]
@@ -87,7 +93,7 @@ def test_no_iwad(monkeypatch):
     launch(mock_files, None, mock_source_port)
 
     process_call = [
-        os.path.join(mock_source_port['dir'], mock_source_port['executable']),
+        os.path.join(mock_source_port_params['dir'], mock_source_port_params['executable']),
         '-file',
         '~/.wadlauncher/wads/sunder/sunder.wad',
         '~/.wadlauncher/wads/sunder/Guncaster.pk3',
