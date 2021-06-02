@@ -47,13 +47,13 @@ class SidebarView:
     def show_dir(self, wad):
         self.current_wad = wad
         self.wad_dir_model.setRootPath(QDir.currentPath())
-        self.wad_dir.setRootIndex(self.wad_dir_model.index(wad['path']))
-        self.selected_path = wad['path']
-        self.selected_wad_id = wad['id']
+        self.wad_dir.setRootIndex(self.wad_dir_model.index(wad.path))
+        self.selected_path = wad.path
+        self.selected_wad_id = wad.id
 
         try:
             self.loadorder_model.clear()
-            for file_path in wad['file_paths']:
+            for file_path in wad.file_paths:
                 file_name = os.path.basename(file_path)
                 item = QStandardItem(file_name)
                 item.setData(file_path, PATH_ROLE)
@@ -62,7 +62,7 @@ class SidebarView:
                 item.setCheckState(Qt.Checked)
                 self.loadorder_model.appendRow(item)
         except KeyError:
-            print('file paths not found in:', wad['name'])
+            print('file paths not found in:', wad.name)
 
     def update_load_ordered_files(self, *_):
         file_paths_reordered = []
@@ -83,7 +83,7 @@ class SidebarView:
         file_path = self.wad_dir_model.filePath(index)
         add_file_to_load_order_string = 'Add {} to load order list'.format(file_name)
         def add_file_to_load_order():
-            self.wads.add_file_path_to_paths(self.current_wad['id'], file_path)
+            self.wads.add_file_path_to_paths(self.current_wad.id, file_path)
             self.show_dir(self.current_wad)
 
         menu_actions = [
@@ -100,7 +100,7 @@ class SidebarView:
         file_path = item.data()
         remove_file_from_load_order_string = 'Remove {} from load order list'.format(file_name)
         def remove_file_from_load_order():
-            self.wads.remove_file_path_from_paths(self.current_wad['id'], file_path)
+            self.wads.remove_file_path_from_paths(self.current_wad.id, file_path)
             self.show_dir(self.current_wad)
 
         menu_actions = [

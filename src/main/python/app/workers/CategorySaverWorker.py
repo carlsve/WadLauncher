@@ -1,5 +1,6 @@
 import sys, json, os, uuid
 from configparser import ConfigParser
+from dataclasses import asdict
 
 from PyQt5.QtCore import QThread, pyqtSignal
 
@@ -26,7 +27,7 @@ class CategorySaverWorker(QThread):
         config = Config.Instance()
         base_path = os.path.expanduser(config['PATHS']['BASE_PATH'])
         self.path = os.path.join(base_path, 'user_categories.ini')
-        self.items = items
+        self.items = [asdict(item) for item in items]
 
     def run(self):
         cfg = ConfigParser(allow_no_value=True)

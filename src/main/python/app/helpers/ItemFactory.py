@@ -11,30 +11,30 @@ def make_generic(text, id):
 
 def make_wad_item(data, flags=None, item=None):
     if not item:
-        item = make_generic(data['name'], data['id'])
-    item.setText(data.get('title', data['name']))
+        item = make_generic(data.name, data.id)
+    item.setText(data.display_name())
     if flags:
         item.setFlags(flags)
-    item.setData(data['id'], ID_ROLE)
-    item.setData(data['model_type'], TYPE_ROLE)
+    item.setData(data.id, ID_ROLE)
+    item.setData(data.model_type, TYPE_ROLE)
     return item
 
 def make_iwad_item(data):
-    return make_generic(data['name'], data['id'])
+    return make_generic(data.name, data.id)
 
 def make_source_port_item(data):
-    return make_generic(data['name'], data['id'])
+    return make_generic(data.name, data.id)
 
 def make_category_item(data, item=None):
     if not item:
-        item = make_generic(data['name'], data['id'])
-    item.setData(data['id'], ID_ROLE)
-    item.setText(data.get('title', data['name']))
-    item.setData(data['model_type'], TYPE_ROLE)
+        item = make_generic(data.name, data.id)
+    item.setData(data.id, ID_ROLE)
+    item.setText(data.name)
+    item.setData(data.model_type, TYPE_ROLE)
     nameItemFont = item.font()
     nameItemFont.setBold(True)
     item.setFont(nameItemFont)
     return item
 
 def make_pending_item(data, item=None):
-    return make_generic('loading...', data['id'])
+    return make_generic('loading...', data.id)

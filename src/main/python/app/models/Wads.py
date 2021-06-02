@@ -10,6 +10,7 @@ from app.workers.WadLoaderWorker import wad_loader_worker_wrapper
 from app.workers.WadImporterWorker import wad_importer_worker_wrapper
 from app.workers.WadRemoverWorker import wad_remover_worker_wrapper
 from app.workers.WadSaverWorker import wad_saver_worker_wrapper
+from app.schemas.Wad import Wad
 
 class Wads(Model):
     LOADED = 'WADS_LOADED'
@@ -25,7 +26,7 @@ class Wads(Model):
     SEARCH = 'WADS_SEARCH'
 
     def __init__(self):
-        Model.__init__(self, saver=wad_saver_worker_wrapper)
+        Model.__init__(self, schema=Wad, saver=wad_saver_worker_wrapper)
         self.wad_dir_files = []
         self.current_idgames_wad_id = None
         self.load_ordered_files = []
@@ -40,7 +41,7 @@ class Wads(Model):
 
     def select_wad(self, id):
         selected_wad = self.find(id)
-        self.load_ordered_files = selected_wad['file_paths']
+        self.load_ordered_files = selected_wad.file_paths
 
         self.broadcast((self.SELECTED, selected_wad))
 
@@ -122,20 +123,20 @@ class Wads(Model):
         wad = self.delete(id)
         def on_remove():
             self.broadcast((self.REMOVE, wad))
-        wad_remover_worker_wrapper(wad['path'], [], [on_remove])
+        wad_remover_worker_wrapper(wad.path, [], [on_remove])
 
     def set_load_order(self, files):
         self.load_ordered_files = files
     
     def add_file_path_to_paths(self, id, file_path):
         wad = self.find(id)
-        paths = [*wad['file_paths'], file_path]
+        paths = [*wad.file_paths, file_path]
         self.update(id, file_paths=paths)
         self.save(id)
     
     def remove_file_path_from_paths(self, id, file_path):
         wad = self.find(id)
-        paths = [fp for fp in wad['file_paths'] if fp != file_path]
+        paths = [fp for fp in wad.file_paths if fp != file_path]
         self.update(id, file_paths=paths)
         self.save(id)
 
