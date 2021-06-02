@@ -1,3 +1,5 @@
+import uuid
+
 from dataclasses import dataclass
 from core.base.Schema import _SchemaBase, _SchemaDefaultsBase
 
@@ -10,7 +12,7 @@ class _WadBase(_SchemaBase):
 
 @dataclass
 class _WadDefaultsBase(_SchemaDefaultsBase):
-    id: str = None
+    id: str = str(uuid.uuid1())
     title: str = None
     dir: str = None
     filename: str = None

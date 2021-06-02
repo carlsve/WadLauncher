@@ -1,6 +1,6 @@
 import os, sys, json, shutil
 
-from core.base.Model import Model
+from core.base.Model import Model, singularizable, singularize
 
 from app.config import Config
 from app.workers.DWApiWorker import api_worker_wrapper, DWApiMethod
@@ -12,6 +12,7 @@ from app.workers.WadRemoverWorker import wad_remover_worker_wrapper
 from app.workers.WadSaverWorker import wad_saver_worker_wrapper
 from app.schemas.Wad import Wad
 
+@singularizable
 class Wads(Model):
     LOADED = 'WADS_LOADED'
     LOADED_ALL = 'WADS_LOADED_ALL'
@@ -119,6 +120,7 @@ class Wads(Model):
             search_by
         )
 
+    @singularize
     def remove(self, id):
         wad = self.delete(id)
         def on_remove():
@@ -127,13 +129,15 @@ class Wads(Model):
 
     def set_load_order(self, files):
         self.load_ordered_files = files
-    
+
+    @singularize
     def add_file_path_to_paths(self, id, file_path):
         wad = self.find(id)
         paths = [*wad.file_paths, file_path]
         self.update(id, file_paths=paths)
         self.save(id)
-    
+
+    @singularize
     def remove_file_path_from_paths(self, id, file_path):
         wad = self.find(id)
         paths = [fp for fp in wad.file_paths if fp != file_path]

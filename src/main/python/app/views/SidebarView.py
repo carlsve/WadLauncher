@@ -83,7 +83,7 @@ class SidebarView:
         file_path = self.wad_dir_model.filePath(index)
         add_file_to_load_order_string = 'Add {} to load order list'.format(file_name)
         def add_file_to_load_order():
-            self.wads.add_file_path_to_paths(self.current_wad.id, file_path)
+            self.current_wad.add_file_path_to_paths(file_path)
             self.show_dir(self.current_wad)
 
         menu_actions = [
@@ -100,7 +100,7 @@ class SidebarView:
         file_path = item.data()
         remove_file_from_load_order_string = 'Remove {} from load order list'.format(file_name)
         def remove_file_from_load_order():
-            self.wads.remove_file_path_from_paths(self.current_wad.id, file_path)
+            self.current_wad.remove_file_path_from_paths(file_path)
             self.show_dir(self.current_wad)
 
         menu_actions = [
