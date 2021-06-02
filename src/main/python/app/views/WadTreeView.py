@@ -217,17 +217,18 @@ class WadTreeView(Base, Form):
         if not all(self.finished_loading.values()): return
         wads_missing_categories = False
         root_id = self.root.data(ID_ROLE)
+        root_category = self.categories.find(root_id)
         for wad in self.loaded_wads.values():
             if wad.id in self.pending_children:
                 item = self.pending_children.pop(wad.id)
                 self.make_tree_item(wad, from_item=item)
             else:
                 item = self.make_tree_item(wad)
-                self.categories.add_child(root_id, wad.id)
+                root_category.add_child(wad.id)
                 self.root.appendRow(item)
                 wads_missing_categories = True
         for category in self.loaded_categories.values():
-            self.categories.add_child(root_id, category.data(ID_ROLE))
+            root_category.add_child(category.id)
             self.root.appendRow(category)
             wads_missing_categories = True
         if wads_missing_categories:
@@ -235,9 +236,8 @@ class WadTreeView(Base, Form):
 
         for pending_child in self.pending_children.values():
             parent = (pending_child.parent() or self.root)
-            parent_id = parent.data(ID_ROLE)
-            
-            self.categories.remove_child(parent_id, pending_child.data(ID_ROLE))
+            parent_category = self.categories.find(parent.data(ID_ROLE))
+            parent_category.remove_child(pending_child.data(ID_ROLE))
             parent.removeRow(pending_child.row())
             self.categories.save()
 
