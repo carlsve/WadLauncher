@@ -38,5 +38,6 @@ class _WadDefaultsBase(_SchemaDefaultsBase):
 
 @dataclass
 class Wad(_WadDefaultsBase, _WadBase):
+    @property
     def display_name(self):
         return self.title or self.name

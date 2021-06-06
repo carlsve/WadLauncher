@@ -168,7 +168,7 @@ class WadTreeView(Base, Form):
                 self.remove_category(data.id)
             entries_by_model = {
                 'categories': ('Remove category ({})'.format(data.name), remove_category),
-                'wads': ('Remove ({})'.format(data.display_name()), remove_wad)
+                'wads': ('Remove ({})'.format(data.display_name), remove_wad)
             }
             entries.append(entries_by_model[item.data(TYPE_ROLE).lower()])
 

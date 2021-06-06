@@ -12,7 +12,7 @@ def make_generic(text, id):
 def make_wad_item(data, flags=None, item=None):
     if not item:
         item = make_generic(data.name, data.id)
-    item.setText(data.display_name())
+    item.setText(data.display_name)
     if flags:
         item.setFlags(flags)
     item.setData(data.id, ID_ROLE)
@@ -29,7 +29,7 @@ def make_category_item(data, item=None):
     if not item:
         item = make_generic(data.name, data.id)
     item.setData(data.id, ID_ROLE)
-    item.setText(data.name)
+    item.setText(data.display_name)
     item.setData(data.model_type, TYPE_ROLE)
     nameItemFont = item.font()
     nameItemFont.setBold(True)

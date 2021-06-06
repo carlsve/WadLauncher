@@ -13,5 +13,6 @@ class _CategoryDefaultsBase(_SchemaDefaultsBase):
 
 @dataclass
 class Category(_CategoryDefaultsBase, _CategoryBase):
+    @property
     def display_name(self):
         return self.name

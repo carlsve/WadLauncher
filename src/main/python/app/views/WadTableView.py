@@ -81,7 +81,7 @@ class WadTableView(Base, Form):
         id = self.selected_item.data(ID_ROLE)
         wad = self.wads.find(id)
 
-        wad_string = wad.display_name()
+        wad_string = wad.display_name
         remove_wad_string = 'Remove ({})'.format(wad_string)
         def remove_wad():
             self.wadtable_model.removeRow(self.selected_item.row())
