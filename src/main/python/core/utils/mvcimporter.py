@@ -22,7 +22,8 @@ def mvcimport(main_dir, root):
 
     model_obj = __classes_obj__()
     for model, model_name in zip(model_classes, model_names):
-        model_obj.__setattr__(snake_casify(model_name), model())
+        _m = model()
+        model_obj.__setattr__(snake_casify(model_name), _m)
 
     controller_obj = __classes_obj__()
     for controller, controller_name in zip(controller_classes, controller_names):
