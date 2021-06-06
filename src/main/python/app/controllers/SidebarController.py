@@ -3,15 +3,12 @@ import sys
 from app.views.SidebarView import SidebarView
 
 class SidebarController:
-    def __init__(self):
-        pass
-
-    def show(self, root, models):
+    def __init__(self, root, models):
         self.wads = models.wads
         self.view = SidebarView(root, self.wads, self)
         self.root = root
         self.wads.subscribe(self.subscription)
-    
+
     def subscription(self, args):
         action, data = args
 

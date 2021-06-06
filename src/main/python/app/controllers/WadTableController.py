@@ -3,7 +3,7 @@ import sys
 from app.views.WadTableView import WadTableView
 
 class WadTableController:
-    def show(self, root, models):
+    def __init__(self, root, models):
         self.wads = models.wads
         self.view = WadTableView(root, self)
         self.wads.subscribe(self.wad_subscription)

@@ -3,7 +3,7 @@ import sys
 from app.views.WadTreeView import WadTreeView
 
 class WadTreeController:
-    def show(self, root, models):
+    def __init__(self, root, models):
         self.models = models
         self.view = WadTreeView(root, self)
         

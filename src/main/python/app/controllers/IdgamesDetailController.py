@@ -7,10 +7,7 @@ from app.workers.DownloadWorker import *
 from app.helpers.StackedWidgetSelector import *
 
 class IdgamesDetailController:
-    def __init__(self):
-        pass
-    
-    def show(self, root, models):
+    def __init__(self, root, models):
         self.root = root
         self.wads = models.wads
         self.view = IdgamesDetailView(root, self)

@@ -6,10 +6,7 @@ from app.workers.DownloadWorker import *
 from app.helpers.StackedWidgetSelector import *
 
 class IdgamesSearchController:
-    def __init__(self):
-        pass
-    
-    def show(self, root, models):
+    def __init__(self, root, models):
         self.view = IdgamesSearchView(root, self)
         self.wads = models.wads
         self.root = root

@@ -4,10 +4,7 @@ from app.views.LaunchBarView import LaunchBarView
 from app.utils import Launcher
 
 class LaunchBarController:
-    def __init__(self):
-        pass
-
-    def show(self, root, models):
+    def __init__(self, root, models):
         self.models = models
         self.selected_iwad = None
         self.selected_source_port = None

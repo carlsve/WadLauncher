@@ -3,10 +3,7 @@ import sys
 from app.views.WadListView import WadListView
 
 class WadListController:
-    def __init__(self):
-        pass
-    
-    def show(self, root, models):
+    def __init__(self, root, models):
         self.wads = models.wads
         self.view = WadListView(root, self)
 

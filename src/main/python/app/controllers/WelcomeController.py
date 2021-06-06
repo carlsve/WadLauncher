@@ -3,5 +3,5 @@ import sys
 from app.views.WelcomeView import WelcomeView
 
 class WelcomeController:
-    def show(self, root, models):
+    def __init__(self, root, models):
         self.view = WelcomeView(root)
