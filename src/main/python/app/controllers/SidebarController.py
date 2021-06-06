@@ -20,5 +20,3 @@ class SidebarController:
  
     def random_clicked(self):
         self.wads.idgames_random()
-
-sys.modules[__name__] = SidebarController()

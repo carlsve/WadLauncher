@@ -33,6 +33,3 @@ class WadTreeController:
     def edit_category(self, id, **params):
         self.models.categories.update(id, **params)
         self.models.categories.save()
-
-
-sys.modules[__name__] = WadTreeController()

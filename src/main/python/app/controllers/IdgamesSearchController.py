@@ -47,5 +47,3 @@ class IdgamesSearchController:
             return
 
         self.wads.idgames_download(data)
-
-sys.modules[__name__] = IdgamesSearchController()

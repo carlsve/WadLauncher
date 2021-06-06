@@ -61,4 +61,3 @@ class Categories(Model):
     def save(self):
         category_saver_worker_wrapper(self.all())
 
-sys.modules[__name__] = Categories()

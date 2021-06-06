@@ -12,5 +12,3 @@ class MenuBarController:
     
     def select_unzip_file(self, file_path):
         self.wads.extract_archive(file_path, should_remove_archive=False, item={}, detail_type='imported')
-
-sys.modules[__name__] = MenuBarController()

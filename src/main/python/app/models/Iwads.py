@@ -19,5 +19,3 @@ class Iwads(Model):
 
     def loaded_all(self):
         self.broadcast((self.LOADED_ALL,None))
-
-sys.modules[__name__] = Iwads()

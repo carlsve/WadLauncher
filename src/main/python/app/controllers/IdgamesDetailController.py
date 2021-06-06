@@ -41,5 +41,3 @@ class IdgamesDetailController:
             return
 
         self.wads.idgames_download(self.data, mirror, detail_type)
-
-sys.modules[__name__] = IdgamesDetailController()

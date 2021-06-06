@@ -24,5 +24,3 @@ class WadListController:
 
     def remove_wad(self, id):
         self.wads.remove(id)
-
-sys.modules[__name__] = WadListController()

@@ -44,5 +44,3 @@ class LaunchBarController:
                 self.selected_iwad,
                 self.selected_source_port
             )
-
-sys.modules[__name__] = LaunchBarController()
