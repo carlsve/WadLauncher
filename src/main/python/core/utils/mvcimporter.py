@@ -1,31 +1,33 @@
 import os
-
 from core.utils.strings import snake_casify
 
-def importer(main_dir, import_path, handler=lambda a: a):
-    module_abspath = os.path.join(main_dir, import_path)
-    module_names = [file.replace('.py', '') for file in os.listdir(module_abspath)
-                        if not (file.startswith('__') and file.endswith(('__', '__.py')))]
+def import_classes(package_name, class_names):
+    package = __import__(package_name, fromlist=class_names)
+    return [getattr(getattr(package, class_name), class_name) for class_name in class_names]
 
-    class __import_obj__:
-        pass
+def get_file_names(main_dir, path):
+    abspath = os.path.join(main_dir, path)
+    return [file.replace('.py', '') for file in os.listdir(abspath)
+                if not (file.startswith('__') and file.endswith(('__', '__.py')))]
 
-    obj = __import_obj__()
-    module_import_path = import_path.replace('/', '.')
-    for module_name in module_names:
-        module = __import__(module_import_path + '.' + module_name, fromlist=[module_name])
-        obj.__setattr__(snake_casify(module_name), handler(module))
+class __classes_obj__:
+    pass
 
-    return obj
+def mvcimport(main_dir, root):
+    model_names = get_file_names(main_dir, 'app/models')
+    controller_names = get_file_names(main_dir, 'app/controllers')
 
-def mvcimport(main_dir, root, models_path='app/models', controllers_path='app/controllers'):
-    models = importer(main_dir, models_path)
+    model_classes = import_classes('app.models', model_names)
+    controller_classes = import_classes('app.controllers', controller_names)
 
-    def controller_handler(controller):
-        controller.show(root, models)
+    model_obj = __classes_obj__()
+    for model, model_name in zip(model_classes, model_names):
+        _m = model()
+        model_obj.__setattr__(snake_casify(model_name), _m)
 
-        return controller
+    controller_obj = __classes_obj__()
+    for controller, controller_name in zip(controller_classes, controller_names):
+        _c = controller(root, model_obj)
+        controller_obj.__setattr__(snake_casify(controller_name), _c)
 
-    controllers = importer(main_dir, controllers_path, controller_handler)
-
-    return (models, controllers)
+    return (model_obj, controller_obj)

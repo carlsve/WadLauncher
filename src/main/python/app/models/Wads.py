@@ -143,4 +143,3 @@ class Wads(Model):
         self.update(id, file_paths=paths)
         self.save(id)
 
-sys.modules[__name__] = Wads()
