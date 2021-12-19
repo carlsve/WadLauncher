@@ -20,7 +20,7 @@ class WadListView:
 
         self.wadlist_model = QStandardItemModel()
         for wad in self.wads.all():
-            self.appendWad(wad)
+            self.append_wad(wad)
         self.wadlist.setModel(self.wadlist_model)
         self.wadlist.setSelectionMode(QAbstractItemView.SingleSelection)
         self.wadlist.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -71,7 +71,7 @@ class WadListView:
 
         self.wads.select_wad(item.data(ID_ROLE))
 
-    def appendWad(self, wad):
+    def append_wad(self, wad):
         item = make_wad_item(wad, LIST_ITEM_FLAGS)
         self.wadlist_model.appendRow(item)
 
@@ -83,4 +83,4 @@ class WadListView:
 
     def import_wads(self, wads):
         for wad in wads:
-            self.appendWad(wad)
+            self.append_wad(wad)
