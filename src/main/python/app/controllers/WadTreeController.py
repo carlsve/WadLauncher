@@ -14,7 +14,7 @@ class WadTreeController:
         action, data = msg
 
         if action == self.models.wads.LOADED:
-            self.view.appendWad(data)
+            self.view.append_wad(data)
         elif action == self.models.wads.LOADED_ALL:
             self.view.finish_loading('wads')
         elif action == self.models.wads.REMOVE:
@@ -22,7 +22,7 @@ class WadTreeController:
         elif action == self.models.wads.IMPORT:
             self.view.import_wad(*data)
         elif action == self.models.categories.LOADED:
-            self.view.appendCategory(data)
+            self.view.append_category(data)
         elif action == self.models.categories.LOADED_ALL:
             self.view.finish_loading('categories')
         elif action == self.models.categories.NEW:

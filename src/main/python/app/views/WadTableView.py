@@ -73,7 +73,7 @@ class WadTableView(Base, Form):
         self.wadtable_model.setHorizontalHeaderLabels([key.capitalize() for key in self.keys])
 
         for wad in self.wads.all():
-            self.appendRow(wad)
+            self.append_row(wad)
 
     def open_menu(self, pos):
         if self.selected_item == None:
@@ -103,7 +103,7 @@ class WadTableView(Base, Form):
         self.selected_item = item
         self.wads.select_wad(item.data(ID_ROLE))
 
-    def appendRow(self, wad):
+    def append_row(self, wad):
         item = make_wad_item(wad, TABLE_ITEM_FLAGS)
         def make_column_item(wad, key):
             return QStandardItem(getattr(wad, key) or 'unknown')

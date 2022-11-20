@@ -175,14 +175,14 @@ class WadTreeView(Base, Form):
         execute_menu = make_context_menu(self, entries)
         execute_menu(pos)
 
-    def appendWad(self, data):
+    def append_wad(self, data):
         if data.id in self.pending_children:
             from_item = self.pending_children.pop(data.id)
             item = self.make_tree_item(data, from_item=from_item)
         else:
             self.loaded_wads[data.id] = data
 
-    def appendCategory(self, data):
+    def append_category(self, data):
         is_root = data.is_root
         item = None
         if is_root:
